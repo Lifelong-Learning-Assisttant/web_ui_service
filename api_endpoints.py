@@ -3,10 +3,15 @@
 API endpoint'ы для взаимодействия с агентом.
 """
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
+import httpx
+import os
+
+# Получение URL агента из переменной окружения
+AGENT_SERVICE_URL = os.getenv("AGENT_SERVICE_URL", "http://localhost:8250")
 
 # Создание приложения FastAPI
 app = FastAPI()
@@ -57,6 +62,23 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_text()
             messages_list.append(("User", data))
             await manager.broadcast(f"User: {data}")
+            
+            # Отправка сообщения агенту
+            try:
+                response = httpx.post(
+                    f"{AGENT_SERVICE_URL}/api/agent/run",
+                    json={"question": data, "session_id": "default"}
+                )
+                if response.status_code == 200:
+                    agent_response = response.json()["answer"]
+                    messages_list.append(("Agent", agent_response))
+                    await manager.broadcast(f"Agent: {agent_response}")
+                else:
+                    messages_list.append(("Agent", "Ошибка при обработке сообщения."))
+                    await manager.broadcast("Agent: Ошибка при обработке сообщения.")
+            except Exception as e:
+                messages_list.append(("Agent", f"Ошибка соединения с агентом: {str(e)}"))
+                await manager.broadcast(f"Agent: Ошибка соединения с агентом: {str(e)}")
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         await manager.broadcast(f"Client disconnected")
@@ -65,7 +87,21 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.post("/api/messages")
 async def send_message(message: Message):
     messages_list.append(("User", message.text))
-    return {"status": "success", "message": "Message received"}
+    
+    # Отправка сообщения агенту
+    try:
+        response = httpx.post(
+            f"{AGENT_SERVICE_URL}/api/agent/run",
+            json={"question": message.text, "session_id": "default"}
+        )
+        if response.status_code == 200:
+            agent_response = response.json()["answer"]
+            messages_list.append(("Agent", agent_response))
+            return {"status": "success", "message": "Message received", "agent_response": agent_response}
+        else:
+            return {"status": "error", "message": "Error processing message"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Endpoint для получения сообщений
 @app.get("/api/messages")

@@ -9,9 +9,19 @@ services:
       - .:/app
     networks:
       - internal_network
+      - rag_network
+      - test_generator_network
     environment:
       - PYTHONUNBUFFERED=1
+      - AGENT_SERVICE_URL=http://agent_service:8250
 
 networks:
   internal_network:
     driver: bridge
+    name: web_ui_internal_network
+  rag_network:
+    external: true
+    name: rag_rag_network
+  test_generator_network:
+    external: true
+    name: llm_tester_default
