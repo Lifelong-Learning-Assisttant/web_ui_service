@@ -63,4 +63,4 @@ ui.button("Сообщение от агента", on_click=lambda:
 
 # Запуск приложения
 if __name__ in {"__main__", "__mp_main__"}:
-    ui.run()
+    ui.run(port=8150)

@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web_ui:
+    build: .
+    ports:
+      - "8150:8150"
+    volumes:
+      - .:/app
+    networks:
+      - internal_network
+    environment:
+      - PYTHONUNBUFFERED=1
+
+networks:
+  internal_network:
+    driver: bridge
