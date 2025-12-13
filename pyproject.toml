@@ -1,0 +1,15 @@
+[project]
+name = "chat-web-ui"
+version = "0.1.0"
+description = "A web interface for displaying conversations between an LLM agent and a user"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "nicegui>=1.0.0",
+    "fastapi>=0.68.0",
+    "uvicorn>=0.15.0",
+    "python-multipart>=0.0.5",
+    "markdown>=3.3.4",
+    "mathjax>=0.1.2",
+    "httpx>=0.28.1",
+]
