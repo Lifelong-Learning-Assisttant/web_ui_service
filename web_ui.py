@@ -29,10 +29,23 @@ session_active = False
 
 @ui.refreshable
 def show_messages():
-    """Отображает сообщения в чате."""
-    with ui.column():
+    """Отображает сообщения в чате как пузырьки — внутри широкой колонки."""
+    with ui.column().style('width: 90vw; max-width: 1100px; margin: 12px auto; gap: 12px;'):
         for author, text in messages_list:
-            ui.markdown(f"**{author}:**\n\n{text}")
+            if author == "User":
+                # выравнивание вправо для сообщений пользователя
+                with ui.row().style('justify-content: flex-end;'):
+                    with ui.card().style('padding:8px; max-width: 80%;'):
+                        ui.markdown(f"**{author}:**  \n\n{text}")
+            elif author == "Agent":
+                # выравнивание влево для сообщений агента
+                with ui.row().style('justify-content: flex-start;'):
+                    with ui.card().style('padding:8px; max-width: 80%;'):
+                        ui.markdown(f"**{author}:**  \n\n{text}")
+            else:
+                # системные сообщения — по центру
+                with ui.row().style('justify-content: center;'):
+                    ui.markdown(f"**{author}:**  \n\n{text}")
 
 def add_message(author, text):
     """Добавляет сообщение в чат (не меняем $ на $$)."""
@@ -110,17 +123,13 @@ $$\int_0^1 x^2 dx = \\frac{1}{3}$$
 # Отображение сообщений
 show_messages()
 
-# Поле ввода для сообщения
-input_field = ui.input(label="Ваше сообщение", placeholder="Введите сообщение...")
-
-# Кнопка для начала сессии
-ui.button("Начать общение", on_click=start_session)
-
-# Кнопка для завершения сессии
-ui.button("Завершить сессию", on_click=end_session)
-
-# Кнопка для отправки сообщения
-ui.button("Отправить", on_click=send_message_sync)
+# Контролы ввода (в той же широкой колонке)
+with ui.row().style('width: 90vw; max-width: 1100px; margin: 6px auto; gap: 8px; align-items: center;'):
+    input_field = ui.input(label="Ваше сообщение", placeholder="Введите сообщение...")
+    input_field.style('flex: 1;')   # input растягивается
+    ui.button("Отправить", on_click=send_message_sync)
+    ui.button("Начать общение", on_click=start_session)
+    ui.button("Завершить сессию", on_click=end_session)
 
 
 # Запуск приложения
