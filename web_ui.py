@@ -125,10 +125,6 @@ ui.button("Завершить сессию", on_click=end_session)
 # Кнопка для отправки сообщения
 ui.button("Отправить", on_click=send_message)
 
-# Кнопка для добавления сообщения от агента
-ui.button("Сообщение от агента", on_click=lambda:
-    add_message("Agent", "Решим уравнение $$x^2 = 4$$ → $$x = \\pm 2$$")
-)
 
 # Запуск приложения
 if __name__ in {"__main__", "__mp_main__"}:
