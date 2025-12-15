@@ -54,6 +54,19 @@ def add_message(author, text):
     # Ререндер MathJax для новых формул (inline будут корректно распознаны)
     ui.run_javascript(render_mathjax())
 
+# Добавление первого сообщения с руководством по формулам
+messages_list.append(("Agent", r"""
+Пусть $$f(x) = x^2 + 1$$
+$$\int_0^1 x^2 dx = \\frac{1}{3}$$
+
+**Краткое руководство по вводу формул:**
+- **Inline-формулы** (внутри текста): используйте `$...$`. Пример: `$x^2 = 4$`.
+- **Блочные формулы** (отдельной строкой): используйте `$$...$$`. Пример:
+  ```
+  $$x^2 = 4$$
+  ```
+"""))
+
 def start_session():
     """Начинает сессию общения с агентом."""
     global session_active
@@ -113,12 +126,9 @@ def send_message_sync():
             add_message("Agent", "Пожалуйста, начните сессию, чтобы отправлять сообщения агенту.")
 
 # Создание основного интерфейса
-ui.markdown(r"""
-### Чат с агентом 🤖
-
-Пусть $$f(x) = x^2 + 1$$
-$$\int_0^1 x^2 dx = \\frac{1}{3}$$
-""")
+with ui.row().style('align-items:center; gap:12px; width:90vw; max-width:1100px; margin: 8px auto;'):
+    ui.image('repo_pics/assistant_icon_small.png').style('width:48px; height:48px; border-radius:6px;')
+    ui.markdown(r'### Чат с агентом')
 
 # Отображение сообщений
 show_messages()
