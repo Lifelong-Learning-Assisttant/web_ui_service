@@ -94,7 +94,9 @@ def send_message():
                 )
                 if response.status_code == 200:
                     agent_response = response.json()["answer"]
-                    add_message("Agent", agent_response)
+                    # Замена одиночных знаков доллара на двойные для формул в ответе агента
+                    agent_response_formatted = agent_response.replace('$', '$$')
+                    add_message("Agent", agent_response_formatted)
                 else:
                     add_message("Agent", "Ошибка при обработке сообщения.")
             except Exception as e:
