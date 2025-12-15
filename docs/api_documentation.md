@@ -128,7 +128,3 @@ uv run python api_endpoints.py
 - `markdown>=3.3.4`
 - `mathjax>=0.1.2`
 - `httpx>=0.23.0`
-
-## Лицензия
-
-Этот проект лицензирован под лицензией MIT. Подробности см. в файле LICENSE.
