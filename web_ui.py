@@ -6,6 +6,7 @@
 from nicegui import ui
 import httpx
 import json
+from scripts.mathjax_config import add_mathjax_support, render_mathjax
 
 # Загрузка настроек
 try:
@@ -18,10 +19,7 @@ except FileNotFoundError:
     AGENT_SERVICE_URL = os.getenv("AGENT_SERVICE_URL", "http://localhost:8250")
 
 # Добавление поддержки MathJax для рендеринга формул
-ui.add_head_html("""
-<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-""")
+add_mathjax_support(ui)
 
 # Список сообщений
 messages_list = []
@@ -37,11 +35,11 @@ def show_messages():
             ui.markdown(f"**{author}:**\n\n{text}")
 
 def add_message(author, text):
-    """Добавляет сообщение в чат."""
+    """Добавляет сообщение в чат (не меняем $ на $$)."""
     messages_list.append((author, text))
     show_messages.refresh()
-    # Вызов MathJax для обработки формул
-    ui.run_javascript("if (typeof MathJax !== 'undefined') MathJax.typeset();")
+    # Ререндер MathJax для новых формул (inline будут корректно распознаны)
+    ui.run_javascript(render_mathjax())
 
 def start_session():
     """Начинает сессию общения с агентом."""
@@ -74,18 +72,17 @@ def end_session():
     else:
         add_message("System", "Сессия не активна.")
 
-def send_message():
-    """Отправляет сообщение агенту."""
+def send_message_sync():
+    """Синхронная отправка сообщения агенту."""
     global session_active
     user_message = input_field.value
     if user_message:
-        # Замена одиночных знаков доллара на двойные для формул
-        user_message_formatted = user_message.replace('$', '$$')
-        add_message("User", user_message_formatted)
+        # НЕ заменяем $ -> $$, передаём как есть
+        add_message("User", user_message)
         input_field.value = ""
         
         if session_active:
-            # Отправка сообщения агенту
+            # Отправка сообщения агенту в синхронном режиме
             try:
                 response = httpx.post(
                     f"{AGENT_SERVICE_URL}/api/agent/run",
@@ -94,9 +91,7 @@ def send_message():
                 )
                 if response.status_code == 200:
                     agent_response = response.json()["answer"]
-                    # Замена одиночных знаков доллара на двойные для формул в ответе агента
-                    agent_response_formatted = agent_response.replace('$', '$$')
-                    add_message("Agent", agent_response_formatted)
+                    add_message("Agent", agent_response)
                 else:
                     add_message("Agent", "Ошибка при обработке сообщения.")
             except Exception as e:
@@ -125,7 +120,7 @@ ui.button("Начать общение", on_click=start_session)
 ui.button("Завершить сессию", on_click=end_session)
 
 # Кнопка для отправки сообщения
-ui.button("Отправить", on_click=send_message)
+ui.button("Отправить", on_click=send_message_sync)
 
 
 # Запуск приложения
