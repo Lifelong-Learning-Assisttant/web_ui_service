@@ -20,11 +20,23 @@
 
 ### Запуск
 
+#### Использование релизной версии (рекомендуется)
+
+Для использования компонента в составе общей системы рекомендуется использовать готовый релизный Docker-образ:
+
+```bash
+docker pull ghcr.io/lifelong-learning-assisttant/web_ui_service:v001
+```
+
+#### Сборка собственной версии (для разработки)
+
+Если вам необходимо внести изменения или собрать свой образ для разработки:
+
 1. Клонируйте репозиторий:
 
 ```bash
 git clone <repository-url>
-cd chat_web_ui
+cd web_ui_service
 ```
 
 2. Соберите и запустите Docker-контейнеры:
@@ -46,6 +58,10 @@ http://localhost:8150
 ```bash
 docker-compose down
 ```
+
+### Подробная информация
+
+Более подробная информация о развертывании, включая различия между development и production режимами, доступна в [документации по развертыванию](docs/docker_deployment.md).
 
 ## Использование
 
@@ -88,6 +104,7 @@ docker-compose down
 
 - [Документация по API](docs/api_documentation.md)
 - [Документация по развертыванию](docs/deployment.md)
+- [Docker Deployment Guide](docs/docker_deployment.md)
 
 ## Лицензия
 

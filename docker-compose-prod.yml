@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   web_ui_prod:
-    image: web_ui_service:v001
+    image: ghcr.io/lifelong-learning-assisttant/web_ui_service:v001
     ports:
       - "8150:8150"
     networks:

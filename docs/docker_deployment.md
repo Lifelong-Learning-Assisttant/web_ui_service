@@ -141,6 +141,16 @@ docker pull ghcr.io/your-username/web_ui_service:v001
 docker-compose -f docker-compose-prod.yml up
 ```
 
+### Релизная версия
+
+В настоящее время доступна релизная версия Docker-образа:
+
+```bash
+docker pull ghcr.io/lifelong-learning-assisttant/web_ui_service:v001
+```
+
+Этот образ предназначен для использования в составе общей системы lifelong_learning_assistant. Для разработки и внесения изменений используйте development режим, описанный выше.
+
 ## Сравнение режимов
 
 | Аспект | Development | Production |
