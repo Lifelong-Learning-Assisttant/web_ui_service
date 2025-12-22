@@ -1,0 +1,26 @@
+# Используем официальный образ Python
+FROM python:3.13-slim
+
+# Устанавливаем зависимости
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Устанавливаем uv через pip
+RUN pip install uv
+
+# Создаем рабочую директорию
+WORKDIR /app
+
+# Копируем только pyproject.toml для установки зависимостей
+COPY pyproject.toml .
+
+# Устанавливаем зависимости
+RUN uv sync
+
+# Открываем порт 8350 для веб-интерфейса
+EXPOSE 8350
+
+# Запускаем веб-интерфейс
+# В dev-окружении код монтируется через volume в docker-compose-dev.yml
+CMD ["uv", "run", "python", "web_ui.py", "--settings", "app_settings-dev.json"]

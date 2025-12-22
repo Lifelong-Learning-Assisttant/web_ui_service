@@ -6,17 +6,28 @@
 from nicegui import ui
 import httpx
 import json
+import sys
+import argparse
 from scripts.mathjax_config import add_mathjax_support, render_mathjax
+
+# Парсинг аргументов командной строки
+parser = argparse.ArgumentParser(description='Web UI for agent chat')
+parser.add_argument('--settings', default='app_settings.json', help='Path to settings file')
+args, unknown = parser.parse_known_args()
 
 # Загрузка настроек
 try:
-    with open("app_settings.json", "r") as f:
+    with open(args.settings, "r") as f:
         settings = json.load(f)
     AGENT_SERVICE_URL = settings.get("agent_service_url", "http://localhost:8250")
+    WEB_UI_PORT = settings.get("web_ui_port", 8150)
+    IS_DEV_VERSION = settings.get("is_dev_version", False)
 except FileNotFoundError:
     # Используем переменную окружения, если файл настроек отсутствует
     import os
     AGENT_SERVICE_URL = os.getenv("AGENT_SERVICE_URL", "http://localhost:8250")
+    WEB_UI_PORT = int(os.getenv("WEB_UI_PORT", "8150"))
+    IS_DEV_VERSION = os.getenv("IS_DEV_VERSION", "false").lower() == "true"
 
 # Добавление поддержки MathJax для рендеринга формул
 add_mathjax_support(ui)
@@ -129,6 +140,11 @@ def send_message_sync():
 with ui.row().style('align-items:center; gap:12px; width:90vw; max-width:1100px; margin: 8px auto;'):
     ui.image('repo_pics/assistant_icon_small.png').style('width:48px; height:48px; border-radius:6px;')
     ui.markdown(r'### Чат с агентом')
+    
+# Отображение индикатора dev версии
+if IS_DEV_VERSION:
+    with ui.row().style('width: 90vw; max-width: 1100px; margin: 0 auto;'):
+        ui.label('⚠️ Это dev версия').style('color: #d32f2f; font-weight: bold; background: #ffebee; padding: 4px 12px; border-radius: 4px; border: 1px solid #d32f2f;')
 
 # Отображение сообщений
 show_messages()
@@ -144,4 +160,4 @@ with ui.row().style('width: 90vw; max-width: 1100px; margin: 6px auto; gap: 8px;
 
 # Запуск приложения
 if __name__ in {"__main__", "__mp_main__"}:
-    ui.run(port=8150)
+    ui.run(port=WEB_UI_PORT)
