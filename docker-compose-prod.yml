@@ -6,20 +6,20 @@ services:
     ports:
       - "8150:8150"
     networks:
-      - internal_network
+      - web_ui_network_prod
       - rag_network
       - test_generator_network
     environment:
       - PYTHONUNBUFFERED=1
-      - AGENT_SERVICE_URL=http://agent_service:8250
+      - AGENT_SERVICE_URL=http://agent_prod:8270
     volumes:
       - ./app_settings-prod.json:/app/app_settings.json:ro
     command: uv run python web_ui.py --settings app_settings.json
 
 networks:
-  internal_network:
+  web_ui_network_prod:
     driver: bridge
-    name: web_ui_internal_network
+    name: web_ui_network_prod
   rag_network:
     external: true
     name: rag_rag_network
