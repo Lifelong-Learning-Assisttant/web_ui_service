@@ -12,18 +12,18 @@ services:
       - /app/__pycache__
       - /app/.pytest_cache
     networks:
-      - internal_network
+      - web_ui_network_dev
       - rag_network
       - test_generator_network
     environment:
       - PYTHONUNBUFFERED=1
-      - AGENT_SERVICE_URL=http://agent_service:8250
+      - AGENT_SERVICE_URL=http://agent_dev:8250
     command: uv run python web_ui.py --settings app_settings-dev.json
 
 networks:
-  internal_network:
+  web_ui_network_dev:
     driver: bridge
-    name: web_ui_internal_network
+    name: web_ui_network_dev
   rag_network:
     external: true
     name: rag_rag_network
