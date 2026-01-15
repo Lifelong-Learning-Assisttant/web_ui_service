@@ -1,20 +1,46 @@
 version: '3.8'
 
 services:
-  web_ui_prod:
-    image: ghcr.io/lifelong-learning-assisttant/web_ui_service:v001
+  # Backend (FastAPI) - production
+  web_ui_backend:
+    image: ghcr.io/lifelong-learning-assisttant/web_ui_backend:v001
     ports:
-      - "8150:8150"
+      - "8151:8151"
+    volumes:
+      - ./backend/app_settings-prod.json:/app/app_settings.json:ro
+    environment:
+      - BACKEND_PORT=8151
+      - AGENT_SERVICE_URL=http://agent_prod:8250
+      - WS_TOKEN=${WS_TOKEN}
+      - LOG_LEVEL=INFO
+      - ALLOWED_ORIGINS=http://localhost:8150,https://your-domain.com
+      - SETTINGS_FILE=app_settings.json
     networks:
       - web_ui_network_prod
       - rag_network
       - test_generator_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8151/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  # Frontend (React) - production
+  web_ui_frontend:
+    image: ghcr.io/lifelong-learning-assisttant/web_ui_frontend:v001
+    ports:
+      - "8150:80"
     environment:
-      - PYTHONUNBUFFERED=1
-      - AGENT_SERVICE_URL=http://agent_prod:8270
-    volumes:
-      - ./app_settings-prod.json:/app/app_settings.json:ro
-    command: uv run python web_ui.py --settings app_settings.json
+      - BACKEND_URL=http://web_ui_backend:8151
+      - WS_TOKEN=${WS_TOKEN}
+      - LOG_LEVEL=INFO
+    networks:
+      - web_ui_network_prod
+    restart: unless-stopped
+    depends_on:
+      web_ui_backend:
+        condition: service_healthy
 
 networks:
   web_ui_network_prod:

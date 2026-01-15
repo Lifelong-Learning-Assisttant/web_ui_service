@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Learning Chat Design Concept - Code & Math</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --tg-blue: #2AABEE;
+            --tg-bg-dark: #17212b;
+            --tg-bg-message-in: #182533;
+            --tg-bg-message-out: #2B5278;
+            --game-accent: #00E5FF;
+            --game-purple: #BD00FF;
+            --game-text: #FFFFFF;
+            --game-bg: #0F1014;
+            --font-main: 'Inter', sans-serif;
+            --font-code: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--game-bg);
+            color: var(--game-text);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(42, 171, 238, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(189, 0, 255, 0.1) 0%, transparent 20%);
+        }
+
+        .poster-container {
+            width: 720px;
+            min-height: 960px;
+            background: linear-gradient(180deg, #0F1014 0%, #1A1C23 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        /* Decorative Grid Background */
+        .bg-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Header Section */
+        .header {
+            padding: 30px 40px 20px;
+            z-index: 2;
+            text-align: center;
+        }
+
+        .brand-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(42, 171, 238, 0.15);
+            border: 1px solid rgba(42, 171, 238, 0.3);
+            border-radius: 20px;
+            color: var(--tg-blue);
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .title {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FFFFFF 0%, #A5C9FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #8B9BB4;
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+
+        /* Main Content Area */
+        .showcase-area {
+            flex: 1;
+            padding: 20px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 2;
+        }
+
+        /* Chat Interface Card */
+        .chat-card {
+            background: rgba(23, 33, 43, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Chat Header */
+        .chat-header {
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .ai-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar-container {
+            position: relative;
+            width: 42px;
+            height: 42px;
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--game-purple);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2AABEE, #9C27B0);
+            color: white;
+            font-size: 20px;
+        }
+
+        .status-ring {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            background: #00E676;
+            border: 2px solid #1A1C23;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #00E676;
+        }
+
+        .ai-info h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .ai-info p {
+            font-size: 11px;
+            color: var(--game-accent);
+        }
+
+        /* Chat Body */
+        .chat-body {
+            padding: 16px;
+            height: 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background-image: radial-gradient(circle at center, rgba(42, 171, 238, 0.03) 0%, transparent 70%);
+            overflow-y: auto;
+        }
+
+        .message {
+            max-width: 85%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .message.ai {
+            align-self: flex-start;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .bubble {
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.4;
+            position: relative;
+        }
+
+        .message.ai .bubble {
+            background: var(--tg-bg-message-in);
+            color: #FFFFFF;
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .message.user .bubble {
+            background: var(--tg-bg-message-out);
+            color: #FFFFFF;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 12px rgba(42, 171, 238, 0.2);
+        }
+
+        /* Code Block Styling */
+        .code-block {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 8px 0;
+            font-family: var(--font-code);
+            font-size: 12px;
+            overflow-x: auto;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 10px;
+            color: #8B9BB4;
+        }
+
+        .copy-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .copy-btn:hover { color: var(--game-accent); }
+
+        /* Syntax Highlighting */
+        .token-keyword { color: #FF79C6; }
+        .token-function { color: #8BE9FD; }
+        .token-string { color: #F1FA8C; }
+        .token-comment { color: #6272A4; }
+        .token-number { color: #BD93F9; }
+
+        /* Math Formula Styling */
+        .math-formula {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .math-notation {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            font-size: 16px;
+            color: #F8F8F2;
+        }
+
+        .math-symbol {
+            font-weight: bold;
+            color: var(--game-accent);
+        }
+
+        .timestamp {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 4px;
+        }
+
+        /* Input Area */
+        .chat-input-area {
+            padding: 10px 16px;
+            background: rgba(23, 33, 43, 0.9);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .input-field {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 10px 16px;
+            color: #fff;
+            font-size: 13px;
+            font-family: var(--font-main);
+        }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8B9BB4;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover { color: var(--tg-blue); background: rgba(42, 171, 238, 0.1); }
+
+        .send-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--tg-blue), #0088CC);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .feature-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .feature-icon i {
+            color: var(--game-accent);
+            font-size: 20px;
+        }
+
+        .feature-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .feature-desc {
+            font-size: 12px;
+            color: #8B9BB4;
+            line-height: 1.4;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 20px 40px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+
+        .footer-text {
+            color: #5E6C84;
+            font-size: 11px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="poster-container">
+    <div class="bg-grid"></div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="brand-tag">Concept UI Design v2</div>
+        <h1 class="title">AI Learning Assistant</h1>
+        <p class="subtitle">Поддержка кода Python и математических формул в игровом формате</p>
+    </div>
+
+    <!-- Content Showcase -->
+    <div class="showcase-area">
+
+        <!-- Chat Interface Mockup -->
+        <div class="chat-card">
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="ai-profile">
+                    <div class="avatar-container">
+                        <div class="avatar">
+                            <i class="material-icons">smart_toy</i>
+                        </div>
+                        <div class="status-ring"></div>
+                    </div>
+                    <div class="ai-info">
+                        <h3>Math & Code Bot</h3>
+                        <p>Python • Calculus • Online</p>
+                    </div>
+                </div>
+                <div class="hud-stats">
+                    <i class="material-icons" style="color: #8B9BB4; font-size: 20px;">more_vert</i>
+                </div>
+            </div>
+
+            <!-- Chat Body -->
+            <div class="chat-body">
+                <!-- AI Message with Code -->
+                <div class="message ai">
+                    <div class="bubble">
+                        Для сортировки списка используем встроенную функцию:
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>Python</span>
+                            <div class="copy-btn">
+                                <i class="material-icons" style="font-size: 12px;">content_copy</i>
+                                <span>Copy</span>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="token-comment"># Сортировка списка</span><br>
+                            <span class="token-keyword">def</span> <span class="token-function">sort_list</span>(arr):<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="token-keyword">return</span> <span class="token-function">sorted</span>(arr)<br><br>
+                            <span class="token-comment"># Пример</span><br>
+                            numbers = [<span class="token-number">3</span>, <span class="token-number">1</span>, <span class="token-number">4</span>, <span class="token-number">1</span>, <span class="token-number">5</span>]<br>
+                            <span class="token-function">print</span>(<span class="token-function">sort_list</span>(numbers))
+                        </div>
+                    </div>
+                    <div class="timestamp">14:23</div>
+                </div>
+
+                <!-- User Message -->
+                <div class="message user">
+                    <div class="bubble">
+                        А как вычислить площадь круга?
+                    </div>
+                    <div class="timestamp">14:25</div>
+                </div>
+
+                <!-- AI Message with Math -->
+                <div class="message ai">
+                    <div class="bubble">
+                        Площадь круга вычисляется по формуле:
+                    </div>
+                    <div class="math-formula">
+                        <div class="math-notation">
+                            A = <span class="math-symbol">π</span>r<sup>2</sup>
+                        </div>
+                    </div>
+                    <div class="bubble" style="margin-top: 8px;">
+                        Где <span class="math-symbol">π</span> ≈ 3.14159, а r — радиус круга.
+                    </div>
+                    <div class="timestamp">14:26</div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="chat-input-area">
+                <div class="action-btn">
+                    <i class="material-icons">add_circle</i>
+                </div>
+                <div class="input-field">Сообщение или формула...</div>
+                <div class="action-btn">
+                    <i class="material-icons">mic</i>
+                </div>
+                <div class="send-btn">
+                    <i class="material-icons">send</i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="material-icons">code</i>
+                </div>
+                <div class="feature-title">Python Syntax</div>
+                <div class="feature-desc">Цветовая подсветка кода и возможность копирования одним кликом.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="material-icons">calculate</i>
+                </div>
+                <div class="feature-title">Math Render</div>
+                <div class="feature-desc">Красивое отображение формул с поддержкой LaTeX нотации.</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-text">
+            Design Concept • Support for Python & Math • Telegram x Game UI
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

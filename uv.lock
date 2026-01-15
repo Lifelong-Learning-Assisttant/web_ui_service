@@ -169,6 +169,7 @@ dependencies = [
     { name = "nicegui" },
     { name = "python-multipart" },
     { name = "uvicorn" },
+    { name = "websockets" },
 ]
 
 [package.metadata]
@@ -180,6 +181,7 @@ requires-dist = [
     { name = "nicegui", specifier = ">=1.0.0" },
     { name = "python-multipart", specifier = ">=0.0.5" },
     { name = "uvicorn", specifier = ">=0.15.0" },
+    { name = "websockets", specifier = ">=15.0.1" },
 ]
 
 [[package]]

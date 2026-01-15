@@ -1,0 +1,43 @@
+[project]
+name = "web-ui-backend"
+version = "1.0.0"
+description = "Backend service for lifelong learning assistant web UI"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [
+    {name = "Kilo Code", email = "dev@example.com"}
+]
+
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "httpx>=0.28.1",
+    "structlog>=23.2.0",
+    "slowapi>=0.1.9",
+    "pydantic-settings>=2.1.0",
+    "python-multipart>=0.0.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+# Если нужно добавить локальные пакеты, можно указать здесь
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"

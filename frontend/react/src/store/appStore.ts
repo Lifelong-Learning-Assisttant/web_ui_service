@@ -1,0 +1,286 @@
+import { create } from 'zustand'
+import { AppState, ChatMessage } from '../types'
+import axios from 'axios'
+
+const API_BASE_URL = '/api'
+
+export const useAppStore = create<AppState>((set, get) => ({
+  messages: [],
+  isLoading: false,
+  selectedFile: null,
+  activeTab: 'chat',
+  latexEnabled: true,
+  sessionId: 'default',
+
+  // Actions
+  setSessionId: async (sessionId: string) => {
+    set({ sessionId, isLoading: true })
+    
+    try {
+      // Загружаем историю сообщений для новой сессии
+      const response = await axios.get(`${API_BASE_URL}/messages?session_id=${sessionId}`)
+      
+      if (response.data.messages && response.data.messages.length > 0) {
+        // Преобразуем историю в формат ChatMessage
+        const historyMessages: ChatMessage[] = []
+        
+        response.data.messages.forEach((msg: any, index: number) => {
+          // Новый формат: {"role": "user"|"agent"|"system", "content": "..."}
+          if (typeof msg === 'object' && msg.role && msg.content) {
+            const role = msg.role === 'user' ? 'user' : (msg.role === 'agent' ? 'assistant' : 'system')
+            
+            if (role === 'system') {
+              // Системные сообщения - добавляем как отдельный тип
+              historyMessages.push({
+                id: `history_sys_${index}_${Date.now()}`,
+                role: 'assistant',
+                content: msg.content,
+                timestamp: new Date(Date.now() - (response.data.messages.length - index) * 1000),
+                isSystem: true
+              })
+            } else {
+              historyMessages.push({
+                id: `history_${index}_${Date.now()}`,
+                role: role,
+                content: msg.content,
+                timestamp: new Date(Date.now() - (response.data.messages.length - index) * 1000)
+              })
+            }
+          }
+          // Старый формат для обратной совместимости
+          else if (Array.isArray(msg) && msg.length === 2) {
+            const role = msg[0] === 'user' ? 'user' : 'assistant'
+            historyMessages.push({
+              id: `history_${index}_${Date.now()}`,
+              role: role,
+              content: msg[1],
+              timestamp: new Date(Date.now() - (response.data.messages.length - index) * 1000)
+            })
+          }
+          // Формат: строка
+          else if (typeof msg === 'string') {
+            historyMessages.push({
+              id: `history_${index}_${Date.now()}`,
+              role: 'assistant',
+              content: msg,
+              timestamp: new Date(Date.now() - (response.data.messages.length - index) * 1000)
+            })
+          }
+        })
+        
+        set({ messages: historyMessages })
+      } else {
+        set({ messages: [] })
+      }
+    } catch (error) {
+      console.error('Error loading session history:', error)
+      set({ messages: [] })
+    } finally {
+      set({ isLoading: false })
+    }
+    
+    set({ sessionId })
+  },
+  
+  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
+    const newMessage: ChatMessage = {
+      ...message,
+      id: Date.now().toString(),
+      timestamp: new Date(),
+    }
+    set((state) => ({ messages: [...state.messages, newMessage] }))
+  },
+
+  sendMessage: async (content: string) => {
+    const { sessionId } = get()
+    set({ isLoading: true })
+    
+    // Add user message
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content,
+      timestamp: new Date(),
+    }
+    
+    // Add assistant placeholder
+    const assistantMessage: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      role: 'assistant',
+      content: 'Обрабатываю ваш запрос...',
+      timestamp: new Date(),
+      isProcessing: true,
+    }
+    
+    // Set initial messages: user + placeholder
+    set({ messages: [userMessage, assistantMessage] })
+    
+    try {
+      // Use existing backend API endpoint
+      const response = await axios.post(`${API_BASE_URL}/agent/run`, {
+        question: content,
+        session_id: sessionId
+      })
+      
+      // Wait for processing and get updated history
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      const historyResponse = await axios.get(`${API_BASE_URL}/messages?session_id=${sessionId}`)
+      
+      if (historyResponse.data.messages && historyResponse.data.messages.length > 0) {
+        const messages = historyResponse.data.messages
+        
+        console.log('DEBUG: Received messages from backend:', messages)
+        
+        // Преобразуем историю в формат ChatMessage
+        const historyMessages: ChatMessage[] = []
+        
+        for (const msg of messages) {
+          // Новый формат: {"role": "user"|"agent"|"system", "content": "..."}
+          if (typeof msg === 'object' && msg.role && msg.content) {
+            const role = msg.role === 'user' ? 'user' : (msg.role === 'agent' ? 'assistant' : 'system')
+            
+            console.log(`DEBUG: Processing message - role: ${msg.role}, mapped to: ${role}`)
+            
+            if (role === 'system') {
+              // Системные сообщения - добавляем как отдельный тип
+              const sysMsg: ChatMessage = {
+                id: `sys_${Date.now()}_${Math.random()}`,
+                role: 'assistant',
+                content: msg.content,
+                timestamp: new Date(),
+                isSystem: true
+              }
+              console.log('DEBUG: Created system message:', sysMsg)
+              historyMessages.push(sysMsg)
+            } else {
+              const normalMsg: ChatMessage = {
+                id: `hist_${Date.now()}_${Math.random()}`,
+                role: role,
+                content: msg.content,
+                timestamp: new Date()
+              }
+              console.log('DEBUG: Created normal message:', normalMsg)
+              historyMessages.push(normalMsg)
+            }
+          }
+          // Старый формат для обратной совместимости
+          else if (Array.isArray(msg) && msg.length === 2) {
+            const role = msg[0] === 'user' ? 'user' : 'assistant'
+            historyMessages.push({
+              id: `hist_${Date.now()}_${Math.random()}`,
+              role: role,
+              content: msg[1],
+              timestamp: new Date()
+            })
+          }
+        }
+        
+        console.log('DEBUG: Final historyMessages:', historyMessages)
+        
+        // Заменяем ВСЕ текущие сообщения на историю от бэкенда
+        set({ messages: historyMessages, isLoading: false })
+      } else {
+        // Нет истории - просто обновляем placeholder
+        set((state) => ({
+          messages: state.messages.map(msg =>
+            msg.id === assistantMessage.id
+              ? { ...msg, content: 'Сообщение обработано', isProcessing: false }
+              : msg
+          ),
+          isLoading: false
+        }))
+      }
+    } catch (error) {
+      console.error('Error sending message:', error)
+      set((state) => ({
+        messages: state.messages.map(msg =>
+          msg.id === assistantMessage.id
+            ? { ...msg, content: 'Произошла ошибка при обработке запроса', isProcessing: false }
+            : msg
+        ),
+        isLoading: false
+      }))
+    }
+  },
+
+  executeAction: async (action: string, data?: any) => {
+    const { sessionId } = get()
+    set({ isLoading: true })
+    try {
+      // Map actions to backend endpoints
+      const actionEndpoints: Record<string, string> = {
+        'quick_qa': '/api/quick_qa',
+        'quiz_generation': '/api/quiz/generate',
+        'web_search': '/api/web/search',
+        'telegram_ingest': '/api/telegram/ingest',
+        'rag_search': '/api/rag/search'
+      }
+      
+      const endpoint = actionEndpoints[action]
+      if (!endpoint) {
+        throw new Error(`Unknown action: ${action}`)
+      }
+      
+      const response = await axios.post(`${API_BASE_URL}${endpoint}`, {
+        ...data,
+        session_id: sessionId
+      })
+      
+      set({ isLoading: false })
+      return response.data
+    } catch (error) {
+      console.error('Error executing action:', error)
+      set({ isLoading: false })
+      throw error
+    }
+  },
+
+  uploadFile: async (file: File) => {
+    const { sessionId } = get()
+    set({ isLoading: true, selectedFile: file })
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('session_id', sessionId)
+    
+    try {
+      const response = await axios.post(`${API_BASE_URL}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      set({ isLoading: false })
+      return response.data
+    } catch (error) {
+      console.error('Error uploading file:', error)
+      set({ isLoading: false })
+      throw error
+    }
+  },
+
+  setActiveTab: (tab: string) => set({ activeTab: tab }),
+  
+  setLatexEnabled: (enabled: boolean) => set({ latexEnabled: enabled }),
+  
+  clearMessages: async () => {
+    const { sessionId } = get()
+    try {
+      await axios.post(`${API_BASE_URL}/session/clear`, { session_id: sessionId })
+    } catch (error) {
+      console.error('Error clearing messages:', error)
+    } finally {
+      // Всегда очищаем локальное состояние
+      set({ messages: [] })
+    }
+  },
+
+  endSession: async () => {
+    const { sessionId } = get()
+    try {
+      await axios.post(`${API_BASE_URL}/session/end`, { session_id: sessionId })
+    } catch (error) {
+      console.error('Error ending session:', error)
+    } finally {
+      // Всегда очищаем локальное состояние и сбрасываем на дефолтную сессию
+      set({ messages: [], sessionId: 'default' })
+    }
+  },
+}))

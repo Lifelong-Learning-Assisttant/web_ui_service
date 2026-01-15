@@ -1,130 +1,195 @@
-# Документация API для чата с агентом ЛЛМ
+# 📚 API Documentation
 
-## Обзор
+Это руководство описывает API endpoints для Web UI Service.
 
-Этот документ описывает API для взаимодействия с чатом агента ЛЛМ. API предоставляет endpoint'ы для отправки и получения сообщений, а также WebSocket для обмена сообщениями в реальном времени.
-
-## Базовый URL
+## 🔗 Base URL
 
 ```
-http://localhost:8150
+Dev:  http://localhost:8350
+Prod: http://localhost:8150
 ```
 
-## Endpoint'ы
+---
 
-### 1. Отправка сообщения
+## 📡 Endpoints
 
-**Метод:** POST
-**Путь:** `/api/messages`
-**Описание:** Отправляет сообщение от пользователя агенту.
+### 1. WebSocket Connection
 
-**Параметры:**
-- `text` (строка, обязательно): Текст сообщения.
+**Method:** WebSocket  
+**Path:** `/ws`  
+**Purpose:** Real-time events (progress, messages, errors)
 
-**Пример запроса:**
-```bash
-curl -X POST "http://localhost:8150/api/messages" \
--H "Content-Type: application/json" \
--d '{"text": "Привет, агент!"}'
+**Subscribe:**
+```json
+{"cmd": "subscribe", "session_id": "demo_quiz_1"}
 ```
 
-**Пример ответа:**
+**Events:**
+```json
+{"type": "progress", "step": "intent_determined", "details": "...", "session_id": "..."}
+{"type": "error", "message": "...", "session_id": "..."}
+{"type": "final", "answer": "...", "session_id": "..."}
+```
+
+---
+
+### 2. Send Message to Agent
+
+**Method:** POST  
+**Path:** `/api/agent/run`  
+**Purpose:** Send user question to agent
+
+**Request:**
 ```json
 {
-  "status": "success",
-  "message": "Message received"
+  "question": "Сгенерируй квиз по Python",
+  "session_id": "demo_quiz_1"
 }
 ```
 
-### 2. Получение сообщений
+**Response:** Async processing, events via WebSocket
 
-**Метод:** GET
-**Путь:** `/api/messages`
-**Описание:** Возвращает список сообщений.
+---
 
-**Пример запроса:**
-```bash
-curl -X GET "http://localhost:8150/api/messages"
-```
+### 3. Get Message History
 
-**Пример ответа:**
+**Method:** GET  
+**Path:** `/api/messages`  
+**Purpose:** Retrieve conversation history
+
+**Parameters:**
+- `session_id` (required): Session identifier
+
+**Response:**
 ```json
 {
   "messages": [
-    ["User", "Привет, агент!"],
-    ["Agent", "Сообщение получено"]
+    {"type": "user", "content": "Привет"},
+    {"type": "agent", "content": "Привет! Чем помочь?"},
+    {"type": "progress", "step": "intent_determined", "details": "..."}
   ]
 }
 ```
 
-### 3. WebSocket соединение
+---
 
-**Метод:** WebSocket
-**Путь:** `/ws`
-**Описание:** Устанавливает WebSocket соединение для обмена сообщениями в реальном времени.
+### 4. Health Check
 
-**Пример использования:**
-```javascript
-const socket = new WebSocket('ws://localhost:8150/ws');
+**Method:** GET  
+**Path:** `/health`  
+**Purpose:** Check service status
 
-socket.onopen = function(e) {
-  console.log("Соединение установлено");
-  socket.send("Привет, агент!");
-};
-
-socket.onmessage = function(event) {
-  console.log("Получено сообщение:", event.data);
-};
-
-socket.onclose = function(event) {
-  if (event.wasClean) {
-    console.log("Соединение закрыто");
-  } else {
-    console.log("Соединение прервано");
-  }
-};
-
-socket.onerror = function(error) {
-  console.log("Ошибка:", error.message);
-};
+**Response:**
+```json
+{"status": "ok", "version": "dev"}
 ```
 
-## Примеры использования
+---
 
-### Отправка сообщения с формулами
+## 📖 Usage Examples
 
-Для отправки сообщения с формулами используйте двойные знаки доллара для обозначения формул:
+### Example 1: Full Flow with WebSocket
 
-```bash
-curl -X POST "http://localhost:8150/api/messages" \
--H "Content-Type: application/json" \
--d '{"text": "Решим уравнение $$x^2 = 4$$ → $$x = \\pm 2$$"}'
+```python
+import asyncio
+import httpx
+import websockets
+
+async def full_flow():
+    session_id = "demo_quiz_1"
+    
+    # 1. Connect WebSocket
+    async with websockets.connect("ws://localhost:8250/ws") as ws:
+        # Subscribe
+        await ws.send(json.dumps({
+            "cmd": "subscribe",
+            "session_id": session_id
+        }))
+        
+        # 2. Send message via HTTP
+        async with httpx.AsyncClient() as client:
+            await client.post(
+                "http://localhost:8250/api/agent/run",
+                json={"question": "Сгенерируй квиз", "session_id": session_id}
+            )
+        
+        # 3. Receive events
+        while True:
+            event = await ws.recv()
+            print(f"Event: {event}")
+
+asyncio.run(full_flow())
 ```
 
-### Получение сообщений с формулами
+### Example 2: Get History
 
-При получении сообщений формулы будут отображаться в формате MathJax.
+```python
+import httpx
 
-## Запуск приложения
+async def get_history():
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            "http://localhost:8250/api/messages",
+            params={"session_id": "demo_quiz_1"}
+        )
+        print(response.json())
 
-### Запуск веб-интерфейса
-
-```bash
-uv run python web_ui.py
+asyncio.run(get_history())
 ```
 
-### Запуск API endpoint'ов
+---
 
-```bash
-uv run python api_endpoints.py
+## 🔗 Integration with AgentService
+
+Web UI communicates with **AgentService**:
+
+- **Dev:** `http://agent_dev:8250`
+- **Prod:** `http://agent_service:8250`
+
+**AgentService Endpoints Used:**
+1. `/ws` — Real-time events
+2. `/api/agent/run` — Run agent
+3. `/api/messages` — Get history
+4. `/api/agent/progress` — Progress updates (internal)
+
+---
+
+## ⚠️ Error Handling
+
+### WebSocket Errors
+- **Connection failed:** Check if AgentService is running
+- **No events:** Verify `session_id` and subscription
+
+### HTTP Errors
+- **404:** Wrong endpoint or service not running
+- **500:** AgentService error, check logs
+
+---
+
+## ⚙️ Configuration
+
+**File:** `app_settings-dev.json`
+```json
+{
+  "web_ui_port": 8350,
+  "agent_service_url": "http://agent_dev:8250",
+  "is_dev_version": true
+}
 ```
 
-## Зависимости
+---
 
-- `nicegui>=1.0.0`
-- `fastapi>=0.68.0`
-- `uvicorn>=0.15.0`
-- `python-multipart>=0.0.5`
-- `markdown>=3.3.4`
-- `mathjax>=0.1.2`
-- `httpx>=0.23.0`
+## 📦 Dependencies
+
+- [`nicegui`](https://nicegui.io/) — UI framework
+- [`httpx`](https://www.python-httpx.org/) — HTTP client
+- [`websockets`](https://websockets.readthedocs.io/) — WebSocket client
+
+---
+
+## 📚 Related Documents
+
+- [Web UI Architecture](web-ui.md)
+- [Docker Deployment](docker_deployment.md)
+- [Formula Input Guide](formula_input_guide.md)
+- [Testing Guide](testing_guide.md)

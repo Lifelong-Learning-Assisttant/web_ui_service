@@ -1,0 +1,29 @@
+# Dockerfile для React Frontend
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Копируем файлы зависимостей
+COPY react/package*.json ./
+
+# Копируем исходный код
+COPY react/ ./
+
+# Устанавливаем все зависимости (включая dev для сборки)
+RUN npm install
+
+# Собираем приложение
+RUN npm run build
+
+# Stage 2: Production
+FROM nginx:alpine
+
+# Копируем собранный React приложение
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Копируем конфиг nginx
+COPY react/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

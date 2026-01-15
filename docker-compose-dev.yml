@@ -1,32 +1,45 @@
 version: '3.8'
 
 services:
-  web_ui_dev:
+  # Backend FastAPI service (существующий)
+  backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile-dev
+    container_name: web_ui_service-backend-dev
     ports:
-      - "8350:8350"
+      - "8351:8351"
     volumes:
-      - .:/app
-      - /app/__pycache__
-      - /app/.pytest_cache
-    networks:
-      - web_ui_network_dev
-      - rag_network
-      - test_generator_network
+      - ./backend:/app
     environment:
       - PYTHONUNBUFFERED=1
+      - ENVIRONMENT=development
+      - BACKEND_PORT=8351
       - AGENT_SERVICE_URL=http://agent_dev:8250
-    command: uv run python web_ui.py --settings app_settings-dev.json
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8080,http://localhost:8350,http://web_ui_service-frontend-dev:80
+      - WS_TOKEN=dev_token_123
+      - SETTINGS_FILE=app_settings-dev.json
+    networks:
+      - web_ui_network_dev
+
+  # Frontend React service (новый)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile-dev
+    container_name: web_ui_service-frontend-dev
+    ports:
+      - "8350:80"
+    depends_on:
+      - backend
+    networks:
+      - web_ui_network_dev
 
 networks:
   web_ui_network_dev:
     driver: bridge
     name: web_ui_network_dev
-  rag_network:
-    external: true
-    name: rag_rag_network
-  test_generator_network:
-    external: true
-    name: llm_tester_default
+
+volumes:
+  frontend-data:
+  frontend-react-data:

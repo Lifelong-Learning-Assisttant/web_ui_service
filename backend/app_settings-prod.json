@@ -1,0 +1,7 @@
+{
+  "port": 8151,
+  "agent_service_url": "http://agent_prod:8250",
+  "allowed_origins": ["http://localhost:8150", "https://your-domain.com"],
+  "ws_token": "prod_token",
+  "log_level": "INFO"
+}

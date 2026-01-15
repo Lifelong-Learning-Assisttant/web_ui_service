@@ -1,246 +1,493 @@
-# Docker Deployment Guide
+# 🐳 Docker Deployment Guide
 
-Этот документ описывает систему развертывания web_ui_service с использованием Docker для разработки и продакшена.
+Это руководство описывает систему Docker-развертывания для Web UI Service с разделением на frontend и backend, development, pre-production и production окружениями.
 
-## Структура файлов
+## 📁 File Structure
 
 ```
 web_ui_service/
-├── app_settings-dev.json      # Конфиг для разработки (порт 8350, is_dev_version: true)
-├── app_settings-prod.json     # Конфиг для продакшена (порт 8150, is_dev_version: false)
-├── Dockerfile-dev             # Dockerfile для разработки
-├── Dockerfile-prod            # Dockerfile для продакшена
-├── docker-compose-dev.yml     # Docker Compose для разработки (web_ui_dev)
-├── docker-compose-prod.yml    # Docker Compose для продакшена (web_ui_prod)
-├── web_ui.py                 # Основной код (поддерживает --settings, показывает индикатор dev)
+├── frontend/
+│   ├── Dockerfile-dev             # Dev frontend (сборка React внутри контейнера)
+│   ├── Dockerfile-prod            # Prod frontend (готовый образ)
+│   ├── react/                     # Исходники React
+│   │   ├── package.json
+│   │   ├── nginx.conf
+│   │   └── src/
+│   └── nginx-prod.conf            # Prod nginx config
+├── backend/
+│   ├── Dockerfile-dev             # Dev backend (volume монтирование)
+│   ├── Dockerfile-prod            # Prod backend (включает код)
+│   ├── app.py                     # FastAPI приложение
+│   └── app_settings-dev.json      # Dev config
+├── docker-compose-dev.yml         # Dev окружение (порт 8350/8351)
+├── docker-compose-preprod.yml     # Pre-prod окружение (порт 8350/8351)
+├── docker-compose-prod.yml        # Prod окружение (порт 8150/8151)
+├── app_settings-prod.json         # Prod config
 └── docs/
-    └── docker_deployment.md  # Эта документация
+    └── docker_deployment.md       # Эта документация
 ```
 
-## Индикатор версии
+## 🎨 Version Indicator
 
-В интерфейсе отображается индикатор версии:
-- **Dev версия**: Показывает красную плашку "⚠️ Это dev версия" сверху
+UI отображает индикатор версии:
+- **Dev версия**: Красный баннер "⚠️ Это dev версия" вверху
+- **Pre-prod версия**: Желтый баннер "⚠️ Это pre-production версия"
 - **Prod версия**: Без индикатора
 
-Это помогает визуально отличить среды при одновременной работе.
+Это помогает визуально различать окружения при одновременном запуске.
 
-## Режим разработки (Development)
+---
 
-### Назначение
-- Быстрая разработка с горячей перезагрузкой кода
-- Изменения в коде отражаются автоматически без пересборки контейнера
-- Используется для отладки и тестирования новых функций
+## 🔄 Workflow: Development → Pre-Production → Production
 
-### Как использовать
+### Полный цикл разработки и релиза:
 
-1. **Запуск сервиса:**
-   ```bash
-   cd web_ui_service
-   docker-compose -f docker-compose-dev.yml up --build
-   ```
-
-2. **Особенности:**
-   - Порт: 8350
-   - Имя сервиса: `web_ui_dev`
-   - Код монтируется через volume: `./:/app`
-   - Изменения в файлах `.py` сразу отражаются в контейнере
-   - Использует `app_settings-dev.json`
-   - Команда запуска: `uv run python web_ui.py --settings app_settings-dev.json`
-
-3. **Остановка:**
-   ```bash
-   docker-compose -f docker-compose-dev.yml down
-   ```
-
-### Технические детали
-
-**Dockerfile-dev:**
-- Минимальный образ Python 3.13-slim
-- Устанавливает только uv и зависимости
-- НЕ копирует код приложения
-- Код монтируется при запуске через volume
-
-**docker-compose-dev.yml:**
-```yaml
-services:
-  web_ui_dev:              # Уникальное имя сервиса
-    build:
-      context: .
-      dockerfile: Dockerfile-dev
-    ports:
-      - "8350:8350"
-    volumes:
-      - .:/app              # Монтирование кода
-      - /app/__pycache__    # Исключение кэша
-      - /app/.pytest_cache  # Исключение кэша тестов
-    command: uv run python web_ui.py --settings app_settings-dev.json
+```mermaid
+graph LR
+    A[Разработка в Dev] --> B[Тестирование в Pre-Prod]
+    B --> C[Публикация в GHCR]
+    C --> D[Развертывание в Prod]
+    
+    style A fill:#90EE90
+    style B fill:#FFD700
+    style C fill:#FFA500
+    style D fill:#FF6B6B
 ```
 
-## Режим продакшена (Production)
+### 1. Development Phase
+**Цель**: Быстрая разработка с hot reload
+```bash
+cd web_ui_service
+docker compose -f docker-compose-dev.yml up --build
+```
+- Порты: 8350 (frontend), 8351 (backend), 8250 (agent)
+- Код монтируется через volume
+- Frontend собирается автоматически
+
+### 2. Pre-Production Phase
+**Цель**: Тестирование prod-сборки перед релизом
+```bash
+# Собираем prod-образы
+cd web_ui_service/frontend
+docker build -f Dockerfile-prod -t web_ui_frontend:preprod .
+cd ../backend
+docker build -f Dockerfile-prod -t web_ui_backend:preprod .
+
+# Запускаем pre-prod
+cd ..
+docker compose -f docker-compose-preprod.yml up
+```
+- Порты: 8350 (frontend), 8351 (backend), 8250 (agent)
+- Использует те же порты, что и dev
+- Код внутри образов (как в prod)
+- Изолированная сеть `web_ui_network_preprod`
+
+### 3. Production Phase
+**Цель**: Production для пользователей
+```bash
+# Публикация в GHCR
+docker tag web_ui_frontend:preprod ghcr.io/lifelong-learning-assisttant/web_ui_frontend:v002
+docker push ghcr.io/lifelong-learning-assisttant/web_ui_frontend:v002
+
+# Запуск prod
+cd web_ui_service
+docker compose -f docker-compose-prod.yml up
+```
+- Порты: 8150 (frontend), 8151 (backend), 8270 (agent)
+- Образы из GHCR
+- Стабильная работа для пользователей
+
+---
+
+## 🔹 Development Mode
 
 ### Назначение
-- Стабильная версия сервиса для развертывания
-- Использует заранее собранный Docker образ
-- Подходит для CI/CD и production сред
+- Быстрая разработка с горячей перезагрузкой backend
+- Автоматическая сборка React frontend
+- Изменения кода отражаются мгновенно
+- Используется для отладки и тестирования новых фич
 
-### Как использовать
+### Архитектура Dev Mode
 
-1. **Сборка образа:**
-   ```bash
-   cd web_ui_service
-   docker build -f Dockerfile-prod -t web_ui_service:v001 .
-   ```
-
-2. **Запуск сервиса:**
-   ```bash
-   docker-compose -f docker-compose-prod.yml up
-   ```
-
-3. **Особенности:**
-   - Порт: 8150
-   - Имя сервиса: `web_ui_prod`
-   - Код ВКЛЮЧЕН в образ (скопирован при сборке)
-   - Монтируется ТОЛЬКО конфиг: `./app_settings-prod.json:/app/app_settings.json:ro`
-   - Использует `app_settings-prod.json`
-   - Команда запуска: `uv run python web_ui.py --settings app_settings.json`
-
-### Технические детали
-
-**Dockerfile-prod:**
-- Полный образ с кодом приложения
-- Копирует весь код: `COPY . .`
-- Использует `app_settings.json` внутри контейнера (переопределяется через volume)
-
-**docker-compose-prod.yml:**
-```yaml
-services:
-  web_ui_prod:             # Уникальное имя сервиса
-    image: web_ui_service:latest  # Использует готовый образ
-    ports:
-      - "8150:8150"
-    volumes:
-      - ./app_settings-prod.json:/app/app_settings.json:ro  # Только конфиг
-    command: uv run python web_ui.py --settings app_settings.json
+```
+┌─────────────────────────────────────────┐
+│  Frontend (React)                       │
+│  Порт: 8350                             │
+│  nginx + собранный React                │
+│  (Dockerfile-dev собирает React)        │
+└─────────────────┬───────────────────────┘
+                  │
+                  │ API requests
+                  ↓
+┌─────────────────────────────────────────┐
+│  Backend (FastAPI)                      │
+│  Порт: 8351                             │
+│  Volume монтирование кода               │
+│  Hot reload поддержка                   │
+└─────────────────────────────────────────┘
+                  │
+                  │ Agent requests
+                  ↓
+┌─────────────────────────────────────────┐
+│  Agent Service                          │
+│  Порт: 8250                             │
+└─────────────────────────────────────────┘
 ```
 
-## Публикация в GitHub Container Registry
+### Использование
 
-Для публикации образа в GitHub Container Registry (GHCR):
+**1. Запуск всех сервисов:**
+```bash
+cd web_ui_service
+docker compose -f docker-compose-dev.yml up --build
+```
+
+**2. Проверка работы:**
+```bash
+curl http://localhost:8350
+curl http://localhost:8351/health
+```
+
+**3. Остановка:**
+```bash
+docker compose -f docker-compose-dev.yml down
+```
+
+---
+
+## 🟡 Pre-Production Mode (NEW!)
+
+### Назначение
+- **Тестирование prod-сборки** перед релизом
+- Проверка что prod-образы работают корректно
+- Тестирование без влияния на пользователей
+- Отладка production-конфигурации
+
+### Ключевые особенности
+
+| Аспект | Pre-Prod | Dev | Prod |
+|--------|----------|-----|------|
+| **Порты** | 8350/8351/8250 | 8350/8351/8250 | 8150/8151/8270 |
+| **Код** | Внутри образа | Volume | Внутри образа |
+| **Сборка** | Prod Dockerfile | Dev Dockerfile | Prod Dockerfile |
+| **Образы** | Локальные preprod | Локальные dev | GHCR |
+| **Сеть** | web_ui_network_preprod | web_ui_network_dev | web_ui_network_prod |
+| **Цель** | Тестирование prod | Разработка | Пользователи |
+
+### Почему pre-prod важен?
+
+1. **Безопасность**: Можно тестировать prod-сборку не затрагивая пользователей
+2. **Изоляция**: Отдельная сеть, не конфликтует с dev и prod
+3. **Скорость**: Не нужно публиковать в GHCR для тестирования
+4. **Удобство**: Использует те же порты, что и dev (удобно для тестов)
+
+### Архитектура Pre-Prod Mode
+
+```
+┌─────────────────────────────────────────┐
+│  Frontend (React)                       │
+│  Порт: 8350                             │
+│  nginx + React из локального образа     │
+│  web_ui_frontend:preprod                │
+└─────────────────┬───────────────────────┘
+                  │
+                  │ API requests
+                  ↓
+┌─────────────────────────────────────────┐
+│  Backend (FastAPI)                      │
+│  Порт: 8351                             │
+│  Код внутри образа                      │
+│  web_ui_backend:preprod                 │
+└─────────────────────────────────────────┘
+                  │
+                  │ Agent requests
+                  ↓
+┌─────────────────────────────────────────┐
+│  Agent Service                          │
+│  Порт: 8250                             │
+│  agent_service:preprod                  │
+└─────────────────────────────────────────┘
+```
+
+### Использование
+
+**1. Сборка pre-prod образов:**
+```bash
+# Frontend
+cd web_ui_service/frontend
+docker build -f Dockerfile-prod -t web_ui_frontend:preprod .
+
+# Backend
+cd ../backend
+docker build -f Dockerfile-prod -t web_ui_backend:preprod .
+
+# Agent
+cd ../../agent_service
+docker build -f Dockerfile-prod -t agent_service:preprod .
+```
+
+**2. Запуск pre-prod:**
+```bash
+# Web UI Service
+cd web_ui_service
+docker compose -f docker-compose-preprod.yml up
+
+# Agent Service (в другом терминале)
+cd ../agent_service
+docker compose -f docker-compose-preprod.yml up
+```
+
+**3. Проверка работы:**
+```bash
+# Все на тех же портах, что и dev!
+curl http://localhost:8350
+curl http://localhost:8351/health
+curl http://localhost:8250/health
+```
+
+**4. Остановка:**
+```bash
+docker compose -f docker-compose-preprod.yml down
+```
+
+### Когда использовать pre-prod?
+
+✅ **Используйте pre-prod когда:**
+- Закончили разработку фичи в dev
+- Хотите проверить prod-сборку
+- Нужно протестировать перед релизом
+- Хотите убедиться что все работает как в prod
+
+❌ **Не используйте pre-prod когда:**
+- Нужно быстро менять код (hot reload)
+- Только начинаете разработку
+- Нужны dev-инструменты (debug, logs)
+
+---
+
+## 🔸 Production Mode
+
+### Назначение
+- Стабильная версия для пользователей
+- Использует предсобранные Docker-образы из GHCR
+- Подходит для CI/CD и production-окружений
+
+### Архитектура Prod Mode
+
+```
+┌─────────────────────────────────────────┐
+│  Frontend (React)                       │
+│  Порт: 8150                             │
+│  nginx + React из GHCR                  │
+│  ghcr.io/.../web_ui_frontend:v001       │
+└─────────────────┬───────────────────────┘
+                  │
+                  │ API requests
+                  ↓
+┌─────────────────────────────────────────┐
+│  Backend (FastAPI)                      │
+│  Порт: 8151                             │
+│  Код внутри образа из GHCR              │
+│  ghcr.io/.../web_ui_backend:v001        │
+└─────────────────────────────────────────┘
+                  │
+                  │ Agent requests
+                  ↓
+┌─────────────────────────────────────────┐
+│  Agent Service                          │
+│  Порт: 8270                             │
+│  ghcr.io/.../agent_service:v001         │
+└─────────────────────────────────────────┘
+```
+
+### Использование
+
+**1. Запуск из GHCR:**
+```bash
+cd web_ui_service
+docker compose -f docker-compose-prod.yml up
+```
+
+**2. Проверка работы:**
+```bash
+curl http://localhost:8150
+curl http://localhost:8151/health
+```
+
+**3. Остановка:**
+```bash
+docker compose -f docker-compose-prod.yml down
+```
+
+---
+
+## 📦 GitHub Container Registry
+
+### Публикация образов
 
 ```bash
 # Логин в GHCR
-docker login ghcr.io/your-username
+docker login ghcr.io/lifelong-learning-assisttant
 
-# Сборка и тегирование
-docker build -f Dockerfile-prod -t ghcr.io/your-username/web_ui_service:v001 .
-docker push ghcr.io/your-username/web_ui_service:v001
+# Frontend
+cd web_ui_service/frontend
+docker build -f Dockerfile-prod -t ghcr.io/lifelong-learning-assisttant/web_ui_frontend:v001 .
+docker push ghcr.io/lifelong-learning-assisttant/web_ui_frontend:v001
 
-# Запуск из GHCR
-docker pull ghcr.io/your-username/web_ui_service:v001
-docker-compose -f docker-compose-prod.yml up
+# Backend
+cd ../backend
+docker build -f Dockerfile-prod -t ghcr.io/lifelong-learning-assisttant/web_ui_backend:v001 .
+docker push ghcr.io/lifelong-learning-assisttant/web_ui_backend:v001
+
+# Agent
+cd ../../agent_service
+docker build -f Dockerfile-prod -t ghcr.io/lifelong-learning-assisttant/agent_service:v001 .
+docker push ghcr.io/lifelong-learning-assisttant/agent_service:v001
 ```
 
-### Релизная версия
+### Доступные образы
 
-В настоящее время доступна релизная версия Docker-образа:
+- `ghcr.io/lifelong-learning-assisttant/web_ui_frontend:v001` - React frontend
+- `ghcr.io/lifelong-learning-assisttant/web_ui_backend:v001` - FastAPI backend
+- `ghcr.io/lifelong-learning-assisttant/agent_service:v001` - Agent service
 
-```bash
-docker pull ghcr.io/lifelong-learning-assisttant/web_ui_service:v001
-```
+---
 
-Этот образ предназначен для использования в составе общей системы lifelong_learning_assistant. Для разработки и внесения изменений используйте development режим, описанный выше.
+## 📊 Полное сравнение сред
 
-## Сравнение режимов
+| Аспект | Development | Pre-Production | Production |
+|--------|-------------|----------------|------------|
+| **Назначение** | Разработка | Тестирование prod | Пользователи |
+| **Frontend порт** | 8350:80 | 8350:80 | 8150:80 |
+| **Backend порт** | 8351:8351 | 8351:8351 | 8151:8151 |
+| **Agent порт** | 8250:8250 | 8250:8250 | 8270:8270 |
+| **Сеть** | web_ui_network_dev | web_ui_network_preprod | web_ui_network_prod |
+| **Frontend код** | Сборка в контейнере | Prod-образ (локальный) | Prod-образ из GHCR |
+| **Backend код** | Volume (hot reload) | Prod-образ (локальный) | Prod-образ из GHCR |
+| **Agent код** | Volume (hot reload) | Prod-образ (локальный) | Prod-образ из GHCR |
+| **Образы** | Локальные dev | Локальные preprod | GHCR |
+| **Публикация** | Нет | Нет | Да (GHCR) |
+| **Скорость** | ⚡⚡⚡ Очень быстро | ⚡ Быстро | 🐌 Зависит от сети |
+| **Риск** | Низкий (только dev) | Средний (тестирование) | Высокий (пользователи) |
 
-| Аспект | Development | Production |
-|--------|-------------|------------|
-| **Порт** | 8350 | 8150 |
-| **Код** | Volume (изменения实时) | Внутри образа |
-| **Конфиг** | app_settings-dev.json | app_settings-prod.json |
-| **Сборка** | При каждом запуске | Один раз |
-| **Скорость** | Быстрые изменения | Стабильность |
-| **Назначение** | Разработка | Продакшен |
+---
 
-## Переменные окружения
+## 🔧 Переменные окружения
 
-Оба режима используют:
-- `PYTHONUNBUFFERED=1` - немедленный вывод логов
-- `AGENT_SERVICE_URL=http://agent_service:8250` - URL агент сервиса
+### Backend
+- `BACKEND_PORT` - порт FastAPI (8351 dev/preprod / 8151 prod)
+- `AGENT_SERVICE_URL` - URL агент сервиса
+- `ALLOWED_ORIGINS` - CORS origins
+- `ENVIRONMENT` - development/preproduction/production
+- `WS_TOKEN` - токен WebSocket
+- `SETTINGS_FILE` - файл конфигурации
 
-## Проверка работы
+### Frontend
+- Переменные окружения не требуются (nginx конфиг фиксированный)
+
+---
+
+## ✅ Verification
 
 ### Development
 ```bash
-# Запуск
 cd web_ui_service
-docker-compose -f docker-compose-dev.yml up --build
-
-# Проверить логи
-docker-compose -f docker-compose-dev.yml logs -f
-
-# Проверить порт
+docker compose -f docker-compose-dev.yml up --build
 curl http://localhost:8350
+curl http://localhost:8351/health
+docker compose -f docker-compose-dev.yml down
+```
 
-# Проверить контейнеры
-docker-compose -f docker-compose-dev.yml ps
+### Pre-Production
+```bash
+# Сборка
+cd web_ui_service/frontend
+docker build -f Dockerfile-prod -t web_ui_frontend:preprod .
+cd ../backend
+docker build -f Dockerfile-prod -t web_ui_backend:preprod .
 
-# Остановка
-docker-compose -f docker-compose-dev.yml down
+# Запуск
+cd ..
+docker compose -f docker-compose-preprod.yml up
+curl http://localhost:8350
+curl http://localhost:8351/health
+docker compose -f docker-compose-preprod.yml down
 ```
 
 ### Production
 ```bash
-# Сборка образа
 cd web_ui_service
-docker build -f Dockerfile-prod -t web_ui_service:v001 .
-
-# Запуск
-docker-compose -f docker-compose-prod.yml up
-
-# Проверить логи
-docker-compose -f docker-compose-prod.yml logs -f
-
-# Проверить порт
+docker compose -f docker-compose-prod.yml up
 curl http://localhost:8150
-
-# Проверить контейнеры
-docker-compose -f docker-compose-prod.yml ps
-
-# Остановка
-docker-compose -f docker-compose-prod.yml down
+curl http://localhost:8151/health
+docker compose -f docker-compose-prod.yml down
 ```
 
-### Запуск обоих окружений одновременно
+### Одновременный запуск всех сред
 ```bash
 # Terminal 1 - Development
 cd web_ui_service
-docker-compose -f docker-compose-dev.yml up --build
+docker compose -f docker-compose-dev.yml up --build
 
-# Terminal 2 - Production
+# Terminal 2 - Pre-Production
 cd web_ui_service
-docker-compose -f docker-compose-prod.yml up
+docker compose -f docker-compose-preprod.yml up
+
+# Terminal 3 - Production
+cd web_ui_service
+docker compose -f docker-compose-prod.yml up
 ```
 
-Контейнеры будут называться:
-- `web_ui_dev_1` (dev, порт 8350)
-- `web_ui_prod_1` (prod, порт 8150)
+Имена контейнеров:
+- `web_ui_service-frontend-dev` (dev, порт 8350)
+- `web_ui_service-backend-dev` (dev, порт 8351)
+- `web_ui_service-frontend-preprod` (preprod, порт 8350)
+- `web_ui_service-backend-preprod` (preprod, порт 8351)
+- `web_ui_service-web_ui_frontend-1` (prod, порт 8150)
+- `web_ui_service-web_ui_backend-1` (prod, порт 8151)
 
-## Отладка
+---
 
-### Проблемы с development
-1. **Изменения не отражаются:**
-   - Проверьте права доступа к файлам
-   - Убедитесь, что файлы в текущей директории
-   - Перезапустите контейнер
+## ⚠️ Troubleshooting
 
-2. **Порт занят:**
-   - Измените порт в docker-compose-dev.yml и app_settings-dev.json
+### Development
+**Frontend возвращает 403/500:**
+- Проверьте что React собрался: `docker logs web_ui_service-frontend-dev`
 
-### Проблемы с production
-1. **Образ не найден:**
-   - Убедитесь, что образ собран: `docker images | grep web_ui_service`
-   
-2. **Ошибка конфигурации:**
-   - Проверьте путь к app_settings-prod.json
-   - Убедитесь, что файл существует и читаем
+**Backend не видит изменения:**
+- Проверьте volume: `docker inspect web_ui_service-backend-dev | grep Mounts`
+
+### Pre-Production
+**Образы не найдены:**
+- Убедитесь что preprod-образы собраны: `docker images | grep preprod`
+
+**Порт занят:**
+- Остановите dev-контейнеры: `docker compose -f docker-compose-dev.yml down`
+
+### Production
+**Образы не найдены:**
+- `docker compose -f docker-compose-prod.yml pull`
+
+**CORS ошибки:**
+- Проверьте ALLOWED_ORIGINS в backend
+
+---
+
+## 📚 Related Documents
+
+- [Web UI Documentation](web-ui.md)
+- [API Documentation](api_documentation.md)
+- [Network Interaction](network_interaction.md)
+- [Agent Service Deployment](../../agent_service/docs/docker_deployment.md)
+
+---
+
+## 🎯 Quick Reference
+
+| Команда | Dev | Pre-Prod | Prod |
+|---------|-----|----------|------|
+| **Запуск** | `up --build` | `up` (после сборки) | `up` |
+| **Сборка** | Авто | Вручную | Вручную (GHCR) |
+| **Порты** | 8350/8351/8250 | 8350/8351/8250 | 8150/8151/8270 |
+| **Hot reload** | ✅ Да | ❌ Нет | ❌ Нет |
+| **Использование** | Разработка | Тестирование prod | Пользователи |

@@ -1,0 +1,6 @@
+{
+  "port": 8350,
+  "backend_url": "http://web_ui_backend:8351",
+  "ws_token": "dev_token_123",
+  "log_level": "INFO"
+}

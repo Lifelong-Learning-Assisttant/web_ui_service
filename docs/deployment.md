@@ -1,94 +1,144 @@
-# Документация по развертыванию
+# Развертывание Web UI
 
 ## Обзор
 
-Этот документ описывает процесс развертывания приложения с использованием Docker. Приложение будет доступно на внешнем порту 8150, а внутреннее общение между частями системы будет закрытым.
+Документация по развертыванию Web UI сервиса через Docker. Подробности смотрите в [docker-compose-dev.yml](../docker-compose-dev.yml) и [docker-compose-prod.yml](../docker-compose-prod.yml).
 
 ## Требования
 
 - Docker
 - Docker Compose
 
-## Сборка и запуск
+## Режимы
 
-### 1. Сборка Docker-образа
+### Development (Разработка)
 
-Для сборки Docker-образа выполните следующую команду:
+**Назначение:** Быстрая разработка с горячей перезагрузкой
 
+**Запуск:**
 ```bash
-docker-compose build
+cd web_ui_service
+docker-compose -f docker-compose-dev.yml up --build
 ```
 
-### 2. Запуск контейнеров
+**Особенности:**
+- Порт: 8350
+- Код монтируется через volume
+- Изменения отражаются мгновенно
+- Использует `app_settings-dev.json`
 
-Для запуска контейнеров выполните следующую команду:
-
+**Остановка:**
 ```bash
-docker-compose up
+docker-compose -f docker-compose-dev.yml down
 ```
 
-### 3. Доступ к веб-интерфейсу
+### Production (Продакшен)
 
-После запуска контейнеров веб-интерфейс будет доступен на порту 8150:
+**Назначение:** Стабильная версия для развертывания
 
+**Сборка образа:**
+```bash
+cd web_ui_service
+docker build -f Dockerfile-prod -t web_ui_service:v001 .
 ```
-http://localhost:8150
+
+**Запуск:**
+```bash
+docker-compose -f docker-compose-prod.yml up
 ```
 
-## Конфигурация сети
+**Особенности:**
+- Порт: 8150
+- Код внутри образа
+- Использует `app_settings-prod.json`
 
-Приложение использует внутреннюю сеть `internal_network` для общения между контейнерами. Эта сеть изолирована от внешнего мира, что обеспечивает безопасность внутреннего общения.
+**Остановка:**
+```bash
+docker-compose -f docker-compose-prod.yml down
+```
+
+## Проверка работы
+
+### Development
+```bash
+# Проверить логи
+docker-compose -f docker-compose-dev.yml logs -f
+
+# Проверить порт
+curl http://localhost:8350
+
+# Проверить контейнеры
+docker-compose -f docker-compose-dev.yml ps
+```
+
+### Production
+```bash
+# Проверить логи
+docker-compose -f docker-compose-prod.yml logs -f
+
+# Проверить порт
+curl http://localhost:8150
+
+# Проверить контейнеры
+docker-compose -f docker-compose-prod.yml ps
+```
+
+## Сравнение режимов
+
+| Аспект | Development | Production |
+|--------|-------------|------------|
+| **Порт** | 8350 | 8150 |
+| **Код** | Volume (изменения实时) | Внутри образа |
+| **Конфиг** | app_settings-dev.json | app_settings-prod.json |
+| **Сборка** | При каждом запуске | Один раз |
+| **Скорость** | Быстрые изменения | Стабильность |
+| **Назначение** | Разработка | Продакшен |
 
 ## Переменные окружения
 
-Вы можете настроить приложение с помощью переменных окружения. Для этого создайте файл `.env` в корневой директории проекта и добавьте необходимые переменные.
+Оба режима используют:
+- `PYTHONUNBUFFERED=1` — немедленный вывод логов
+- `AGENT_SERVICE_URL` — URL агент сервиса
 
-Пример файла `.env`:
+## Отладка
 
-```
-PYTHONUNBUFFERED=1
-```
+### Проблемы с development
+1. **Изменения не отражаются:**
+   - Проверьте права доступа к файлам
+   - Убедитесь, что файлы в текущей директории
+   - Перезапустите контейнер
 
-## Логирование
+2. **Порт занят:**
+   - Измените порт в docker-compose-dev.yml и app_settings-dev.json
 
-Для просмотра логов выполните следующую команду:
+### Проблемы с production
+1. **Образ не найден:**
+   - Убедитесь, что образ собран: `docker images | grep web_ui_service`
 
+2. **Ошибка конфигурации:**
+   - Проверьте путь к app_settings-prod.json
+   - Убедитесь, что файл существует и читаем
+
+## GitHub Container Registry
+
+### Публикация
 ```bash
-docker-compose logs
+# Логин
+docker login ghcr.io/your-username
+
+# Сборка и тегирование
+docker build -f Dockerfile-prod -t ghcr.io/your-username/web_ui_service:v001 .
+docker push ghcr.io/your-username/web_ui_service:v001
 ```
 
-## Остановка контейнеров
-
-Для остановки контейнеров выполните следующую команду:
-
+### Запуск из GHCR
 ```bash
-docker-compose down
+docker pull ghcr.io/your-username/web_ui_service:v001
+docker-compose -f docker-compose-prod.yml up
 ```
 
-## Обновление приложения
+## См. также
 
-Для обновления приложения выполните следующие шаги:
-
-1. Остановите контейнеры:
-
-```bash
-docker-compose down
-```
-
-2. Обновите код приложения.
-
-3. Соберите новый Docker-образ:
-
-```bash
-docker-compose build
-```
-
-4. Запустите контейнеры:
-
-```bash
-docker-compose up
-```
-
-## Лицензия
-
-Этот проект лицензирован под лицензией MIT. Подробности см. в файле LICENSE.
+- [Web UI Documentation](web-ui.md)
+- [API Documentation](api_documentation.md)
+- [Docker Deployment Guide](docker_deployment.md)
