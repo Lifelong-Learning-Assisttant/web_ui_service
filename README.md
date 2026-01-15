@@ -195,6 +195,23 @@ GET http://localhost:8250/api/messages?session_id=demo_quiz_1
 {"type": "final", "answer": "...", "session_id": "..."}
 ```
 
+### Session Management
+
+**POST /api/session/cancel**
+```json
+{"session_id": "..."}
+```
+
+**POST /api/session/clear**
+```json
+{"session_id": "..."}
+```
+
+**POST /api/session/end**
+```json
+{"session_id": "..."}
+```
+
 ---
 
 ## 🎨 Механизмы
