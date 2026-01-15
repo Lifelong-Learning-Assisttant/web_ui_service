@@ -8,17 +8,20 @@ services:
       - "8151:8151"
     volumes:
       - ./backend/app_settings-prod.json:/app/app_settings.json:ro
+      - ./tests:/app/tests_integration
     environment:
       - BACKEND_PORT=8151
-      - AGENT_SERVICE_URL=http://agent_prod:8270
+      - AGENT_SERVICE_URL=http://agent-service:8270
       - WS_TOKEN=${WS_TOKEN}
       - LOG_LEVEL=INFO
       - ALLOWED_ORIGINS=http://localhost:8150,https://your-domain.com
       - SETTINGS_FILE=app_settings.json
     networks:
-      - web_ui_network
-      - rag_network
-      - test_generator_network
+      web_ui_network:
+        aliases:
+          - web-backend
+      rag_network:
+      test_generator_network:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8151/health"]
@@ -32,11 +35,13 @@ services:
     ports:
       - "8150:80"
     environment:
-      - BACKEND_URL=http://web_ui_backend:8151
+      - BACKEND_URL=http://web-backend:8151
       - WS_TOKEN=${WS_TOKEN}
       - LOG_LEVEL=INFO
     networks:
-      - web_ui_network
+      web_ui_network:
+        aliases:
+          - web-frontend
     restart: unless-stopped
     depends_on:
       web_ui_backend:
@@ -44,11 +49,10 @@ services:
 
 networks:
   web_ui_network:
-    external: true
     name: web_ui_network
   rag_network:
-    external: true
     name: rag_rag_network
-  test_generator_network:
     external: true
-    name: llm_tester_default
+  test_generator_network:
+    name: test_generator_default
+    external: true

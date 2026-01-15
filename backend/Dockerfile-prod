@@ -22,8 +22,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 
 # Создаём venv и синхронизируем зависимости
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv venv ${VIRTUAL_ENV} \
+RUN uv venv ${VIRTUAL_ENV} \
     && uv sync --locked --active
 
 # Копируем код приложения

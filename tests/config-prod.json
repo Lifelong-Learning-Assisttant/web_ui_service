@@ -1,0 +1,7 @@
+{
+  "agent_url": "http://agent-service:8270",
+  "web_backend_url": "http://web-backend:8151",
+  "web_frontend_url": "http://web-frontend:80",
+  "ws_base_url": "ws://web-backend:8151",
+  "ws_token": "dev_token_123"
+}
