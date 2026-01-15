@@ -9,7 +9,7 @@ import json
 import signal
 import sys
 from datetime import datetime, timezone
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
 from contextlib import asynccontextmanager
 
 import httpx
@@ -72,7 +72,7 @@ logger = structlog.get_logger()
 limiter = Limiter(key_func=get_remote_address)
 
 # ===== Lifespan =====
-ws_connections: Dict[str, WebSocket] = {}
+ws_connections: Dict[str, List[WebSocket]] = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -95,11 +95,12 @@ async def lifespan(app: FastAPI):
 
 async def close_all_connections():
     """Закрыть все WebSocket соединения"""
-    for session_id, ws in list(ws_connections.items()):
-        try:
-            await ws.close(code=1001, reason="Server shutting down")
-        except:
-            pass
+    for session_id, sockets in list(ws_connections.items()):
+        for ws in sockets:
+            try:
+                await ws.close(code=1001, reason="Server shutting down")
+            except:
+                pass
     ws_connections.clear()
 
 # ===== FastAPI App =====
@@ -158,9 +159,18 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str, token: str =
         return
     
     await websocket.accept()
-    ws_connections[session_id] = websocket
+    if session_id not in ws_connections:
+        ws_connections[session_id] = []
+    ws_connections[session_id].append(websocket)
     
-    logger.info("websocket_connected", session_id=session_id, ip=websocket.client.host)
+    logger.info("websocket_connected", session_id=session_id, ip=websocket.client.host, total_for_session=len(ws_connections[session_id]))
+    
+    # Отправляем подтверждение подписки
+    await websocket.send_json({
+        "type": "subscribed",
+        "session_id": session_id,
+        "message": f"Subscribed to session {session_id}"
+    })
     
     try:
         while True:
@@ -179,19 +189,29 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str, token: str =
         logger.error("websocket_error", session_id=session_id, error=str(e))
     finally:
         if session_id in ws_connections:
-            del ws_connections[session_id]
+            if websocket in ws_connections[session_id]:
+                ws_connections[session_id].remove(websocket)
+            if not ws_connections[session_id]:
+                del ws_connections[session_id]
 
 async def broadcast_to_session(session_id: str, message: dict):
     """Отправить сообщение всем подписчикам сессии"""
     if session_id in ws_connections:
-        try:
-            await ws_connections[session_id].send_json(message)
-            logger.debug("message_broadcasted", session_id=session_id, step=message.get("step"))
-        except Exception as e:
-            logger.warning("broadcast_failed", session_id=session_id, error=str(e))
-            # Удаляем соединение если оно мертво
-            if session_id in ws_connections:
-                del ws_connections[session_id]
+        disconnected = []
+        for ws in ws_connections[session_id]:
+            try:
+                await ws.send_json(message)
+                logger.debug("message_broadcasted", session_id=session_id, step=message.get("step"))
+            except Exception as e:
+                logger.warning("broadcast_failed", session_id=session_id, error=str(e))
+                disconnected.append(ws)
+        
+        # Очистка мертвых соединений
+        for ws in disconnected:
+            if ws in ws_connections[session_id]:
+                ws_connections[session_id].remove(ws)
+        if session_id in ws_connections and not ws_connections[session_id]:
+            del ws_connections[session_id]
 
 # ===== API Endpoints =====
 @app.get("/health")

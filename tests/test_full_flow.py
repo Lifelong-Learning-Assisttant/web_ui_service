@@ -10,8 +10,8 @@ import httpx
 import websockets
 from datetime import datetime
 
-AGENT_URL = "http://agent_service-agent_dev-1:8250"
-WEB_UI_URL = "http://web_ui_dev:8350"
+AGENT_URL = "http://agent_dev:8250"
+WEB_UI_URL = "http://web_ui_front-dev:80"
 
 async def test_full_flow():
     """Тест полного потока"""
@@ -41,17 +41,13 @@ async def test_full_flow():
         print(f"    ❌ Ошибка: {e}")
         return False
     
-    # Шаг 3: Подключаем WebSocket
-    print(f"\n[3] Подключение WebSocket к {AGENT_URL.replace('http', 'ws')}/ws...")
-    ws_url = f"{AGENT_URL.replace('http', 'ws')}/ws"
+    # Шаг 3: Подключаем WebSocket к БЭКЕНДУ
+    # Так как тест запускается внутри контейнера бэкенда, используем localhost
+    ws_url = f"ws://localhost:8351/ws/{session_id}?token=dev_token_123"
+    print(f"\n[3] Подключение WebSocket к {ws_url}...")
     ws = None
     try:
         ws = await websockets.connect(ws_url)
-        # Отправляем подписку
-        await ws.send(json.dumps({
-            "cmd": "subscribe",
-            "session_id": session_id
-        }))
         response = await ws.recv()
         response_data = json.loads(response)
         print(f"    ✅ Подписка: {response_data.get('message', response_data)}")

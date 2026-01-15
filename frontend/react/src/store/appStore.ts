@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { AppState, ChatMessage } from '../types'
 import axios from 'axios'
+import { wsService } from './websocketService'
 
 const API_BASE_URL = '/api'
 
@@ -15,6 +16,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Actions
   setSessionId: async (sessionId: string) => {
     set({ sessionId, isLoading: true })
+    
+    // Подключаем WebSocket при смене сессии
+    wsService.connect(sessionId);
     
     try {
       // Загружаем историю сообщений для новой сессии
@@ -112,8 +116,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       isProcessing: true,
     }
     
-    // Set initial messages: user + placeholder
-    set({ messages: [userMessage, assistantMessage] })
+    // Append new messages to existing history
+    set((state) => ({
+      messages: [...state.messages, userMessage, assistantMessage]
+    }))
     
     try {
       // Use existing backend API endpoint
@@ -122,75 +128,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         session_id: sessionId
       })
       
-      // Wait for processing and get updated history
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      const historyResponse = await axios.get(`${API_BASE_URL}/messages?session_id=${sessionId}`)
-      
-      if (historyResponse.data.messages && historyResponse.data.messages.length > 0) {
-        const messages = historyResponse.data.messages
-        
-        console.log('DEBUG: Received messages from backend:', messages)
-        
-        // Преобразуем историю в формат ChatMessage
-        const historyMessages: ChatMessage[] = []
-        
-        for (const msg of messages) {
-          // Новый формат: {"role": "user"|"agent"|"system", "content": "..."}
-          if (typeof msg === 'object' && msg.role && msg.content) {
-            const role = msg.role === 'user' ? 'user' : (msg.role === 'agent' ? 'assistant' : 'system')
-            
-            console.log(`DEBUG: Processing message - role: ${msg.role}, mapped to: ${role}`)
-            
-            if (role === 'system') {
-              // Системные сообщения - добавляем как отдельный тип
-              const sysMsg: ChatMessage = {
-                id: `sys_${Date.now()}_${Math.random()}`,
-                role: 'assistant',
-                content: msg.content,
-                timestamp: new Date(),
-                isSystem: true
-              }
-              console.log('DEBUG: Created system message:', sysMsg)
-              historyMessages.push(sysMsg)
-            } else {
-              const normalMsg: ChatMessage = {
-                id: `hist_${Date.now()}_${Math.random()}`,
-                role: role,
-                content: msg.content,
-                timestamp: new Date()
-              }
-              console.log('DEBUG: Created normal message:', normalMsg)
-              historyMessages.push(normalMsg)
-            }
-          }
-          // Старый формат для обратной совместимости
-          else if (Array.isArray(msg) && msg.length === 2) {
-            const role = msg[0] === 'user' ? 'user' : 'assistant'
-            historyMessages.push({
-              id: `hist_${Date.now()}_${Math.random()}`,
-              role: role,
-              content: msg[1],
-              timestamp: new Date()
-            })
-          }
-        }
-        
-        console.log('DEBUG: Final historyMessages:', historyMessages)
-        
-        // Заменяем ВСЕ текущие сообщения на историю от бэкенда
-        set({ messages: historyMessages, isLoading: false })
-      } else {
-        // Нет истории - просто обновляем placeholder
-        set((state) => ({
-          messages: state.messages.map(msg =>
-            msg.id === assistantMessage.id
-              ? { ...msg, content: 'Сообщение обработано', isProcessing: false }
-              : msg
-          ),
-          isLoading: false
-        }))
-      }
+      // Мы больше не ждем фиксированное время и не запрашиваем историю вручную.
+      // WebSocket (wsService) сам инициирует обновление истории через setSessionId,
+      // когда получит событие final_answer или ошибку.
+      set({ isLoading: false })
     } catch (error) {
       console.error('Error sending message:', error)
       set((state) => ({

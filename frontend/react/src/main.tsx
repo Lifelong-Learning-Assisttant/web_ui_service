@@ -51,7 +51,12 @@ const theme = createTheme({
 })
 
 const AppContent: React.FC = () => {
-  const { activeTab, setActiveTab } = useAppStore()
+  const { activeTab, setActiveTab, sessionId, setSessionId } = useAppStore()
+
+  // Инициализация WebSocket при старте
+  React.useEffect(() => {
+    setSessionId(sessionId)
+  }, [])
 
   const renderContent = () => {
     switch (activeTab) {

@@ -11,6 +11,7 @@ services:
       - "8351:8351"
     volumes:
       - ./backend:/app
+      - ./tests:/app/tests_integration
     environment:
       - PYTHONUNBUFFERED=1
       - ENVIRONMENT=development
@@ -20,7 +21,9 @@ services:
       - WS_TOKEN=dev_token_123
       - SETTINGS_FILE=app_settings-dev.json
     networks:
-      - web_ui_network_dev
+      web_ui_network_dev:
+        aliases:
+          - web_ui_back-dev
 
   # Frontend React service (новый)
   frontend:
@@ -33,7 +36,9 @@ services:
     depends_on:
       - backend
     networks:
-      - web_ui_network_dev
+      web_ui_network_dev:
+        aliases:
+          - web_ui_front-dev
 
 networks:
   web_ui_network_dev:
