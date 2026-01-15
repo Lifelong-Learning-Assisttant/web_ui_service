@@ -24,6 +24,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       // Загружаем историю сообщений для новой сессии
       const response = await axios.get(`${API_BASE_URL}/messages?session_id=${sessionId}`)
       
+      console.log('Loaded history raw data:', response.data);
+      
       if (response.data.messages && response.data.messages.length > 0) {
         // Преобразуем историю в формат ChatMessage
         const historyMessages: ChatMessage[] = []
@@ -31,7 +33,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         response.data.messages.forEach((msg: any, index: number) => {
           // Новый формат: {"role": "user"|"agent"|"system", "content": "..."}
           if (typeof msg === 'object' && msg.role && msg.content) {
-            const role = msg.role === 'user' ? 'user' : (msg.role === 'agent' ? 'assistant' : 'system')
+            const role = msg.role === 'user' ? 'user' : (msg.role === 'agent' || msg.role === 'assistant' ? 'assistant' : 'system')
             
             if (role === 'system') {
               // Системные сообщения - добавляем как отдельный тип
@@ -45,7 +47,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             } else {
               historyMessages.push({
                 id: `history_${index}_${Date.now()}`,
-                role: role,
+                role: role as 'user' | 'assistant',
                 content: msg.content,
                 timestamp: new Date(Date.now() - (response.data.messages.length - index) * 1000)
               })

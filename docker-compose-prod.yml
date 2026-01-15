@@ -10,13 +10,13 @@ services:
       - ./backend/app_settings-prod.json:/app/app_settings.json:ro
     environment:
       - BACKEND_PORT=8151
-      - AGENT_SERVICE_URL=http://agent_prod:8250
+      - AGENT_SERVICE_URL=http://agent_prod:8270
       - WS_TOKEN=${WS_TOKEN}
       - LOG_LEVEL=INFO
       - ALLOWED_ORIGINS=http://localhost:8150,https://your-domain.com
       - SETTINGS_FILE=app_settings.json
     networks:
-      - web_ui_network_prod
+      - web_ui_network
       - rag_network
       - test_generator_network
     restart: unless-stopped
@@ -36,16 +36,16 @@ services:
       - WS_TOKEN=${WS_TOKEN}
       - LOG_LEVEL=INFO
     networks:
-      - web_ui_network_prod
+      - web_ui_network
     restart: unless-stopped
     depends_on:
       web_ui_backend:
         condition: service_healthy
 
 networks:
-  web_ui_network_prod:
-    driver: bridge
-    name: web_ui_network_prod
+  web_ui_network:
+    external: true
+    name: web_ui_network
   rag_network:
     external: true
     name: rag_rag_network

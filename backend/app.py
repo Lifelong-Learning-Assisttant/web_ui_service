@@ -229,7 +229,7 @@ async def get_messages(request: Request, session_id: str = "default"):
     """Get message history for session"""
     try:
         async with httpx.AsyncClient() as client:
-            # Агент использует /api/messages, не /api/session/history
+            # Агент использует /api/messages
             response = await client.get(
                 f"{settings.agent_service_url}/api/messages",
                 params={"session_id": session_id},
@@ -238,8 +238,9 @@ async def get_messages(request: Request, session_id: str = "default"):
             
             if response.status_code == 200:
                 data = response.json()
-                logger.info("history_loaded", session_id=session_id, count=len(data.get("messages", [])))
-                return {"messages": data.get("messages", [])}
+                messages = data.get("messages", [])
+                logger.info("history_loaded", session_id=session_id, count=len(messages))
+                return {"messages": messages}
             else:
                 logger.warning("history_not_found", session_id=session_id, status=response.status_code)
                 return {"messages": []}
@@ -266,8 +267,12 @@ async def run_agent(request: Request, body: AgentRunRequest):
                 logger.info("agent_started", session_id=body.session_id)
                 return {"status": "started", "session_id": body.session_id}
             else:
-                logger.error("agent_failed", session_id=body.session_id, status=response.status_code)
-                raise HTTPException(status_code=response.status_code, detail="Agent service error")
+                try:
+                    error_detail = response.json()
+                except:
+                    error_detail = response.text
+                logger.error("agent_failed", session_id=body.session_id, status=response.status_code, detail=error_detail)
+                raise HTTPException(status_code=response.status_code, detail=f"Agent service error: {error_detail}")
                 
     except Exception as e:
         logger.error("agent_error", session_id=body.session_id, error=str(e))
