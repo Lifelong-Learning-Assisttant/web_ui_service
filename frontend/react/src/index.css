@@ -81,6 +81,25 @@
 }
 
 @layer components {
+  /* KaTeX Neon Styling */
+  .katex {
+    @apply text-accent-cyan;
+    text-shadow: 0 0 5px rgba(0, 234, 255, 0.4);
+  }
+  
+  .ai-bubble-glow .katex {
+    @apply text-accent-lime;
+    text-shadow: 0 0 5px rgba(162, 255, 0, 0.4);
+  }
+
+  .ai-bubble-glow .katex-display {
+    @apply bg-black/40 p-4 rounded border border-accent-lime/20 my-4;
+  }
+
+  .user-bubble-glow .katex-display,
+  .glass-panel .katex-display {
+    @apply bg-black/40 p-4 rounded border border-accent-cyan/20 my-4;
+  }
   .cyber-border {
     position: relative;
     background: rgba(14, 17, 22, 0.9);

@@ -23,11 +23,11 @@ export const ChatInterface: React.FC = () => {
 
   const formatContent = (content: string) => {
     // Упрощенный парсинг для демонстрации, в будущем добавим полноценный Markdown
-    const parts = content.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g);
+    const parts = content.split(/(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$)/g);
     
     return parts.map((part, i) => {
       if (part.startsWith('$$') && part.endsWith('$$')) {
-        return <BlockMath key={i} math={part.slice(2, -2)} />;
+        return <div key={i} className="my-4 overflow-x-auto"><BlockMath math={part.slice(2, -2)} /></div>;
       }
       if (part.startsWith('$') && part.endsWith('$')) {
         return <InlineMath key={i} math={part.slice(1, -1)} />;

@@ -1,30 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import {
-  Box,
-  TextField,
-  Button,
-  Paper,
-  Typography,
-  Alert,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Divider,
-  Grid
-} from '@mui/material'
-import { Save, History, SmartToy, Search, Quiz } from '@mui/icons-material'
 import { useAppStore } from '../store/appStore'
 import { PROVIDERS, MODELS_BY_PROVIDER, ProviderId } from '../constants/models'
-import { AppSettings, LLMSettings } from '../types'
+import { LLMSettings } from '../types'
+import { Save, History, Trash2, Cpu, Database, Brain, Info, Settings as SettingsIcon } from 'lucide-react'
 
 export const Settings: React.FC = () => {
   const [sessionInput, setSessionInput] = useState('')
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
   
-  const { sessionId, setSessionId, isLoading, settings, updateSettings } = useAppStore()
-  const [localSettings, setLocalSettings] = useState<AppSettings>(settings)
+  const { sessionId, setSessionId, isLoading, settings, updateSettings, clearMessages } = useAppStore()
+  const [localSettings, setLocalSettings] = useState(settings)
 
   useEffect(() => {
     setSessionInput(sessionId)
@@ -32,16 +17,16 @@ export const Settings: React.FC = () => {
 
   const handleSaveSession = async () => {
     if (!sessionInput.trim()) {
-      setMessage({ type: 'error', text: 'Пожалуйста, введите Session ID' })
+      setMessage({ type: 'error', text: 'PLEASE_ENTER_SESSION_ID' })
       return
     }
 
     try {
       await setSessionId(sessionInput.trim())
       await updateSettings(localSettings)
-      setMessage({ type: 'success', text: `Настройки и Session ID сохранены` })
+      setMessage({ type: 'success', text: 'CONFIGURATION_SYNC_COMPLETE' })
     } catch (error) {
-      setMessage({ type: 'error', text: 'Ошибка при сохранении настроек' })
+      setMessage({ type: 'error', text: 'SYNC_ERROR::ACCESS_DENIED' })
     }
   }
 
@@ -50,7 +35,6 @@ export const Settings: React.FC = () => {
       const currentServiceSettings = prev[service] as LLMSettings;
       const updatedService = { ...currentServiceSettings, [field]: value };
       
-      // Если изменился провайдер, сбрасываем модель на первую доступную для этого провайдера
       if (field === 'provider') {
         updatedService.model = MODELS_BY_PROVIDER[value as ProviderId][0].id;
       }
@@ -67,209 +51,157 @@ export const Settings: React.FC = () => {
     const currentProvider = serviceSettings.provider as ProviderId;
     
     return (
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, gap: 1 }}>
-          {icon}
-          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-            {label}
-          </Typography>
-        </Box>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Провайдер</InputLabel>
-              <Select
-                value={serviceSettings.provider}
-                label="Провайдер"
-                onChange={(e) => handleSettingChange(service, 'provider', e.target.value)}
-              >
-                {PROVIDERS.map(p => (
-                  <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Модель</InputLabel>
-              <Select
-                value={serviceSettings.model}
-                label="Модель"
-                onChange={(e) => handleSettingChange(service, 'model', e.target.value)}
-              >
-                {MODELS_BY_PROVIDER[currentProvider].map(m => (
-                  <MenuItem key={m.id} value={m.id}>{m.name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
-      </Box>
+      <div className="cyber-border p-4 bg-black/20 border-white/5 space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="p-1.5 bg-primary/10 rounded border border-primary/20">
+            {icon}
+          </div>
+          <span className="text-[10px] font-display font-bold text-primary tracking-widest uppercase">{label}</span>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-[8px] text-slate-500 font-bold uppercase tracking-tighter ml-1">Provider</label>
+            <select 
+              value={serviceSettings.provider}
+              onChange={(e) => handleSettingChange(service, 'provider', e.target.value)}
+              className="w-full bg-black/40 border border-primary/20 rounded p-2 text-xs font-mono text-primary focus:border-primary outline-none appearance-none cursor-pointer"
+            >
+              {PROVIDERS.map(p => (
+                <option key={p.id} value={p.id} className="bg-surface-dark">{p.name}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="space-y-1">
+            <label className="text-[8px] text-slate-500 font-bold uppercase tracking-tighter ml-1">Model_Node</label>
+            <select 
+              value={serviceSettings.model}
+              onChange={(e) => handleSettingChange(service, 'model', e.target.value)}
+              className="w-full bg-black/40 border border-primary/20 rounded p-2 text-xs font-mono text-secondary focus:border-secondary outline-none appearance-none cursor-pointer"
+            >
+              {MODELS_BY_PROVIDER[currentProvider].map(m => (
+                <option key={m.id} value={m.id} className="bg-surface-dark">{m.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
     );
   }
 
-  const handleLoadHistory = async () => {
-    if (!sessionInput.trim()) {
-      setMessage({ type: 'error', text: 'Пожалуйста, введите Session ID для загрузки истории' })
-      return
-    }
-
-    try {
-      await setSessionId(sessionInput.trim())
-      setMessage({ type: 'success', text: `История для сессии "${sessionInput.trim()}" загружена в чат` })
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Ошибка при загрузке истории' })
-    }
-  }
-
-  const handleClearMessages = async () => {
-    const { clearMessages } = useAppStore.getState()
-    await clearMessages()
-    setMessage({ type: 'info', text: 'История сообщений очищена' })
-  }
-
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#f5f5f5', p: 2 }}>
+    <div className="flex-1 flex flex-col overflow-hidden bg-background-dark text-slate-300 font-mono p-4 md:p-8 space-y-6 cyber-scroll">
       {/* Header */}
-      <Box sx={{ 
-        p: 2, 
-        bgcolor: 'white', 
-        borderBottom: '1px solid #e0e0e0',
-        mb: 2,
-        borderRadius: 2
-      }}>
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          ⚙️ Настройки сессии
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          Управление Session ID и историей сообщений
-        </Typography>
-      </Box>
+      <section className="cyber-border p-6 border-primary/30 bg-surface-dark/40 relative overflow-hidden shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-primary/10 rounded-lg border border-primary/30 shadow-[0_0_15px_rgba(0,255,204,0.2)]">
+            <SettingsIcon className="w-6 h-6 text-primary animate-spin-slow" />
+          </div>
+          <div>
+            <h2 className="font-display text-xl md:text-2xl text-white neon-text-cyan tracking-tighter uppercase">System_Configuration</h2>
+            <p className="text-[10px] text-slate-500 font-mono tracking-[0.2em] uppercase">Core // Neural_Link_Parameters</p>
+          </div>
+        </div>
+      </section>
 
-      {/* Main Content */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
-        <Paper sx={{ p: 3, mb: 2 }}>
-          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-            🤖 Настройки моделей
-          </Typography>
+      <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
+        {/* Model Section */}
+        <div className="grid grid-cols-1 gap-6">
+          {renderLLMSelect('agent', 'AI_ORCHESTRATOR', <Cpu className="w-4 h-4 text-primary" />)}
+          {renderLLMSelect('rag', 'KNOWLEDGE_BASE_RAG', <Database className="w-4 h-4 text-accent-cyan" />)}
+          {renderLLMSelect('quiz', 'QUIZ_ENGINE', <Brain className="w-4 h-4 text-secondary" />)}
+        </div>
 
-          {renderLLMSelect('agent', 'Агент (Оркестратор)', <SmartToy color="primary" />)}
-          <Divider sx={{ my: 2 }} />
-          {renderLLMSelect('rag', 'RAG (База знаний)', <Search color="info" />)}
-          <Divider sx={{ my: 2 }} />
-          {renderLLMSelect('quiz', 'Генератор квизов', <Quiz color="secondary" />)}
+        {/* Session Control */}
+        <div className="cyber-border p-6 border-secondary/20 bg-black/20 space-y-6">
+          <div className="flex items-center gap-2">
+            <div className="w-1 h-4 bg-secondary shadow-[0_0_8px_#DAFF00]"></div>
+            <h3 className="font-display text-xs tracking-[0.3em] text-white uppercase">Session_Terminal</h3>
+          </div>
 
-          <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 600 }}>
-            🆔 Сессия
-          </Typography>
-          
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              Текущая сессия: <strong>{sessionId}</strong>
-            </Typography>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest px-1">
+              <span className="text-slate-500">Active_ID:</span>
+              <span className="text-secondary neon-text-lime">{sessionId}</span>
+            </div>
 
-            <TextField
-              fullWidth
-              size="small"
-              label="Session ID"
-              value={sessionInput}
-              onChange={(e) => setSessionInput(e.target.value)}
-              placeholder="Например: react_test_1"
-              disabled={isLoading}
-            />
-          </Box>
+            <div className="relative">
+              <label className="absolute -top-1.5 left-3 px-1 bg-background-dark text-[8px] font-bold text-primary uppercase tracking-tighter">Enter_Session_ID</label>
+              <input 
+                className="w-full bg-black/40 border border-primary/20 rounded p-3 text-sm font-mono text-primary focus:border-primary outline-none placeholder-slate-800"
+                value={sessionInput}
+                onChange={(e) => setSessionInput(e.target.value)}
+                placeholder="react_test_link_01"
+                disabled={isLoading}
+              />
+            </div>
 
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSaveSession}
-              disabled={isLoading || !sessionInput.trim()}
-              startIcon={<Save />}
-              sx={{ flex: 1, minWidth: '150px' }}
-            >
-              Сохранить
-            </Button>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <button 
+                onClick={handleSaveSession}
+                disabled={isLoading || !sessionInput.trim()}
+                className="bg-primary hover:bg-white text-black font-bold py-3 px-4 rounded-sm text-[10px] tracking-widest uppercase flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-30"
+              >
+                <Save className="w-3 h-3" /> Sync_Config
+              </button>
+              <button 
+                onClick={async () => {
+                  try {
+                    await setSessionId(sessionInput.trim());
+                    setMessage({ type: 'success', text: 'HISTORY_FETCH_SUCCESS' });
+                  } catch (e) {
+                    setMessage({ type: 'error', text: 'FETCH_FAILED' });
+                  }
+                }}
+                disabled={isLoading || !sessionInput.trim()}
+                className="border border-secondary/40 hover:bg-secondary/10 text-secondary font-bold py-3 px-4 rounded-sm text-[10px] tracking-widest uppercase flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-30"
+              >
+                <History className="w-3 h-3" /> Pull_History
+              </button>
+              <button 
+                onClick={async () => {
+                  if(confirm('PURGE_ALL_DATA?')) {
+                    await clearMessages();
+                    setMessage({ type: 'info', text: 'MEMORY_PURGED' });
+                  }
+                }}
+                disabled={isLoading}
+                className="border border-pulse-red/40 hover:bg-pulse-red/10 text-pulse-red font-bold py-3 px-4 rounded-sm text-[10px] tracking-widest uppercase flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-30"
+              >
+                <Trash2 className="w-3 h-3" /> Purge_Buffer
+              </button>
+            </div>
+          </div>
+        </div>
 
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={handleLoadHistory}
-              disabled={isLoading || !sessionInput.trim()}
-              startIcon={<History />}
-              sx={{ flex: 1, minWidth: '150px' }}
-            >
-              Загрузить историю
-            </Button>
+        {/* Instructions */}
+        <div className="cyber-border p-6 border-white/5 bg-surface-dark/20 relative overflow-hidden group">
+          <div className="flex items-center gap-2 mb-4">
+            <Info className="w-4 h-4 text-slate-500" />
+            <h3 className="font-display text-[10px] tracking-[0.2em] text-slate-400 uppercase">Protocol_Manual</h3>
+          </div>
+          <div className="text-[11px] text-slate-500 space-y-2 leading-relaxed">
+            <p><span className="text-primary font-bold mr-2">{'>'}</span>To sync with existing neural history, enter <span className="text-slate-300">Session_ID</span> and initiate <span className="text-secondary">Pull_History</span>.</p>
+            <p><span className="text-primary font-bold mr-2">{'>'}</span>New sessions are initialized by entering a unique identifier and executing <span className="text-primary">Sync_Config</span>.</p>
+            <p><span className="text-primary font-bold mr-2">{'>'}</span>Warning: <span className="text-pulse-red">Purge_Buffer</span> will permanently erase local message cache.</p>
+          </div>
+        </div>
 
-            <Button
-              variant="text"
-              color="error"
-              onClick={handleClearMessages}
-              disabled={isLoading}
-              sx={{ flex: 1, minWidth: '150px' }}
-            >
-              Очистить чат
-            </Button>
-          </Box>
-
-          {isLoading && (
-            <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, gap: 1 }}>
-              <CircularProgress size={20} />
-              <Typography variant="body2" color="text.secondary">
-                Загрузка...
-              </Typography>
-            </Box>
-          )}
-        </Paper>
-
-        {/* Info Section */}
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-            📖 Инструкция
-          </Typography>
-          
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            <strong>Как подключиться к существующей истории:</strong>
-          </Typography>
-          
-          <Typography variant="body2" component="div" sx={{ pl: 2 }}>
-            <ul>
-              <li>В поле "Session ID" введите ID сессии (например: <code>react_test_1</code>)</li>
-              <li>Нажмите "Загрузить историю" - сообщения появятся в чате</li>
-              <li>Или нажмите "Сохранить" - переключитесь на эту сессию без загрузки истории</li>
-            </ul>
-          </Typography>
-
-          <Typography variant="body2" sx={{ mt: 2, mb: 1 }}>
-            <strong>Создание новой сессии:</strong>
-          </Typography>
-          
-          <Typography variant="body2" component="div" sx={{ pl: 2 }}>
-            <ul>
-              <li>Введите новый Session ID (например: <code>my_new_session</code>)</li>
-              <li>Нажмите "Сохранить"</li>
-              <li>Начните общение - все сообщения сохранятся под этим ID</li>
-            </ul>
-          </Typography>
-
-          <Typography variant="body2" sx={{ mt: 2 }}>
-            <strong>Текущие сессии в тестах:</strong> react_test_1, session_1, session_2
-          </Typography>
-        </Paper>
-
-        {/* Messages */}
+        {/* Feedback Message */}
         {message && (
-          <Box sx={{ mt: 2 }}>
-            <Alert 
-              severity={message.type === 'error' ? 'error' : message.type === 'success' ? 'success' : 'info'}
-              onClose={() => setMessage(null)}
-            >
+          <div className={`cyber-border p-4 animate-pulse ${
+            message.type === 'error' ? 'border-pulse-red bg-pulse-red/5 text-pulse-red' : 
+            message.type === 'success' ? 'border-accent-lime bg-accent-lime/5 text-accent-lime' : 
+            'border-primary bg-primary/5 text-primary'
+          }`}>
+            <div className="flex items-center gap-3 text-[10px] font-bold tracking-widest uppercase">
+              <span className="w-2 h-2 rounded-full bg-current"></span>
               {message.text}
-            </Alert>
-          </Box>
+            </div>
+          </div>
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   )
 }

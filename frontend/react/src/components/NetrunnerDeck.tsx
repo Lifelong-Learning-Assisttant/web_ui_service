@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/appStore';
 import { Terminal, MessageSquare, BookOpen, Send, Edit3, Eye } from 'lucide-react';
-import { BlockMath } from 'react-katex';
+import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
 
 type DeckTab = 'TERMINAL' | 'AI_SYNC' | 'ANSWER_QUIZ';
@@ -104,9 +104,16 @@ export const NetrunnerDeck: React.FC<NetrunnerDeckProps> = ({ mode }) => {
                   ) : (
                     <div className="w-full h-full p-3 overflow-y-auto cyber-scroll text-slate-300 text-sm">
                       {inputText ? (
-                        <div className="prose prose-invert max-w-none">
-                          {/* Здесь будет рендеринг Markdown + KaTeX */}
-                          <BlockMath math={inputText} />
+                        <div className="space-y-2 whitespace-pre-wrap">
+                          {inputText.split(/(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$)/g).map((part, i) => {
+                            if (part.startsWith('$$') && part.endsWith('$$')) {
+                              return <BlockMath key={i} math={part.slice(2, -2)} />;
+                            }
+                            if (part.startsWith('$') && part.endsWith('$')) {
+                              return <InlineMath key={i} math={part.slice(1, -1)} />;
+                            }
+                            return <span key={i}>{part}</span>;
+                          })}
                         </div>
                       ) : (
                         <span className="text-slate-700 italic">Preview empty...</span>
