@@ -260,7 +260,7 @@ async def run_agent(request: Request, body: AgentRunRequest):
                     "question": body.question,
                     "session_id": body.session_id
                 },
-                timeout=60.0
+                timeout=300.0
             )
             
             if response.status_code == 200:
