@@ -31,6 +31,7 @@ class Settings:
                 data = json.load(f)
             self.port = data.get("port", 8351)
             self.agent_service_url = data.get("agent_service_url", "http://agent_dev:8250")
+            self.user_service_url = data.get("user_service_url", "http://user_service:8000")
             self.allowed_origins = data.get("allowed_origins", ["http://localhost:8350"])
             self.ws_token = data.get("ws_token", "dev_token_123")
             self.log_level = data.get("log_level", "INFO")
@@ -38,6 +39,7 @@ class Settings:
             import os
             self.port = int(os.getenv("BACKEND_PORT", "8351"))
             self.agent_service_url = os.getenv("AGENT_SERVICE_URL", "http://agent_dev:8250")
+            self.user_service_url = os.getenv("USER_SERVICE_URL", "http://user_service:8000")
             self.allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:8350").split(",")
             self.ws_token = os.getenv("WS_TOKEN", "dev_token_123")
             self.log_level = os.getenv("LOG_LEVEL", "INFO")
@@ -345,6 +347,67 @@ async def end_session(request: Request, body: SessionRequest):
             
     except Exception as e:
         logger.error("end_session_error", session_id=body.session_id, error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/auth/login")
+async def login(request: Request):
+    """Proxy login request to User Service"""
+    try:
+        body = await request.form()
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{settings.user_service_url}/auth/login",
+                data=body,
+                timeout=10.0
+            )
+            return JSONResponse(
+                status_code=response.status_code,
+                content=response.json()
+            )
+    except Exception as e:
+        logger.error("login_proxy_error", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/settings")
+async def get_user_settings(request: Request, user_id: str):
+    """Get user settings from User Service"""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{settings.user_service_url}/settings/{user_id}",
+                timeout=5.0
+            )
+            return JSONResponse(
+                status_code=response.status_code,
+                content=response.json()
+            )
+    except Exception as e:
+        logger.error("get_settings_proxy_error", error=str(e))
+        return JSONResponse(status_code=200, content={})
+
+@app.post("/api/session/settings")
+async def update_user_settings(request: Request):
+    """Update user settings in User Service"""
+    try:
+        body = await request.json()
+        user_id = body.get("user_id")
+        user_settings = body.get("settings")
+        
+        if not user_id or not user_settings:
+            raise HTTPException(status_code=400, detail="user_id and settings required")
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{settings.user_service_url}/settings/{user_id}",
+                json=user_settings,
+                timeout=5.0
+            )
+            return JSONResponse(
+                status_code=response.status_code,
+                content=response.json()
+            )
+    except Exception as e:
+        logger.error("update_settings_proxy_error", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 # ===== Main =====

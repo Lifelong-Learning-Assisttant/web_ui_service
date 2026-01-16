@@ -6,16 +6,25 @@ import {
   Paper,
   Typography,
   Alert,
-  CircularProgress
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Divider,
+  Grid
 } from '@mui/material'
-import { Save, Upload, History } from '@mui/icons-material'
+import { Save, History, SmartToy, Search, Quiz } from '@mui/icons-material'
 import { useAppStore } from '../store/appStore'
+import { PROVIDERS, MODELS_BY_PROVIDER, ProviderId } from '../constants/models'
+import { AppSettings, LLMSettings } from '../types'
 
 export const Settings: React.FC = () => {
   const [sessionInput, setSessionInput] = useState('')
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
   
-  const { sessionId, setSessionId, isLoading } = useAppStore()
+  const { sessionId, setSessionId, isLoading, settings, updateSettings } = useAppStore()
+  const [localSettings, setLocalSettings] = useState<AppSettings>(settings)
 
   useEffect(() => {
     setSessionInput(sessionId)
@@ -27,8 +36,74 @@ export const Settings: React.FC = () => {
       return
     }
 
-    await setSessionId(sessionInput.trim())
-    setMessage({ type: 'success', text: `Session ID сохранен: ${sessionInput.trim()}` })
+    try {
+      await setSessionId(sessionInput.trim())
+      await updateSettings(localSettings)
+      setMessage({ type: 'success', text: `Настройки и Session ID сохранены` })
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Ошибка при сохранении настроек' })
+    }
+  }
+
+  const handleSettingChange = (service: keyof AppSettings, field: keyof LLMSettings, value: string) => {
+    setLocalSettings(prev => {
+      const updatedService = { ...prev[service], [field]: value };
+      
+      // Если изменился провайдер, сбрасываем модель на первую доступную для этого провайдера
+      if (field === 'provider') {
+        updatedService.model = MODELS_BY_PROVIDER[value as ProviderId][0].id;
+      }
+      
+      return {
+        ...prev,
+        [service]: updatedService
+      };
+    });
+  }
+
+  const renderLLMSelect = (service: keyof AppSettings, label: string, icon: React.ReactNode) => {
+    const currentProvider = localSettings[service].provider as ProviderId;
+    
+    return (
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, gap: 1 }}>
+          {icon}
+          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            {label}
+          </Typography>
+        </Box>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Провайдер</InputLabel>
+              <Select
+                value={localSettings[service].provider}
+                label="Провайдер"
+                onChange={(e) => handleSettingChange(service, 'provider', e.target.value)}
+              >
+                {PROVIDERS.map(p => (
+                  <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Модель</InputLabel>
+              <Select
+                value={localSettings[service].model}
+                label="Модель"
+                onChange={(e) => handleSettingChange(service, 'model', e.target.value)}
+              >
+                {MODELS_BY_PROVIDER[currentProvider].map(m => (
+                  <MenuItem key={m.id} value={m.id}>{m.name}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+      </Box>
+    );
   }
 
   const handleLoadHistory = async () => {
@@ -72,23 +147,35 @@ export const Settings: React.FC = () => {
       {/* Main Content */}
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         <Paper sx={{ p: 3, mb: 2 }}>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-            Session ID
-          </Typography>
-          
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Текущая сессия: <strong>{sessionId}</strong>
+          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+            🤖 Настройки моделей
           </Typography>
 
-          <TextField
-            fullWidth
-            label="Введите Session ID"
-            value={sessionInput}
-            onChange={(e) => setSessionInput(e.target.value)}
-            placeholder="Например: react_test_1"
-            sx={{ mb: 2 }}
-            disabled={isLoading}
-          />
+          {renderLLMSelect('agent', 'Агент (Оркестратор)', <SmartToy color="primary" />)}
+          <Divider sx={{ my: 2 }} />
+          {renderLLMSelect('rag', 'RAG (База знаний)', <Search color="info" />)}
+          <Divider sx={{ my: 2 }} />
+          {renderLLMSelect('quiz', 'Генератор квизов', <Quiz color="secondary" />)}
+
+          <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 600 }}>
+            🆔 Сессия
+          </Typography>
+          
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              Текущая сессия: <strong>{sessionId}</strong>
+            </Typography>
+
+            <TextField
+              fullWidth
+              size="small"
+              label="Session ID"
+              value={sessionInput}
+              onChange={(e) => setSessionInput(e.target.value)}
+              placeholder="Например: react_test_1"
+              disabled={isLoading}
+            />
+          </Box>
 
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             <Button

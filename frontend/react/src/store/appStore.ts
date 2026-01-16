@@ -1,19 +1,60 @@
 import { create } from 'zustand'
-import { AppState, ChatMessage } from '../types'
+import { AppState, ChatMessage, AppSettings } from '../types'
 import axios from 'axios'
 import { wsService } from './websocketService'
 
 const API_BASE_URL = '/api'
 
 export const useAppStore = create<AppState>((set, get) => ({
+  user: null,
+  token: localStorage.getItem('token'),
   messages: [],
   isLoading: false,
   selectedFile: null,
   activeTab: 'chat',
   latexEnabled: true,
   sessionId: 'default',
+  settings: {
+    agent: { provider: 'zai', model: 'glm-4.6v' },
+    rag: { provider: 'openai', model: 'gpt-4o-mini' },
+    quiz: { provider: 'openai', model: 'gpt-4o-mini' }
+  },
 
   // Actions
+  login: async (username, password) => {
+    set({ isLoading: true })
+    try {
+      const formData = new FormData()
+      formData.append('username', username)
+      formData.append('password', password)
+      
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, formData)
+      const { access_token, user_id, username: loginUsername } = response.data
+      
+      localStorage.setItem('token', access_token)
+      set({ token: access_token, user: { id: user_id, username: loginUsername }, isLoading: false })
+      
+      // Load user settings after login
+      try {
+        const settingsRes = await axios.get(`${API_BASE_URL}/settings?user_id=${user_id}`)
+        if (settingsRes.data && Object.keys(settingsRes.data).length > 0) {
+          set({ settings: settingsRes.data })
+        }
+      } catch (e) {
+        console.warn('Failed to load user settings, using defaults')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      set({ isLoading: false })
+      throw error
+    }
+  },
+
+  logout: () => {
+    localStorage.removeItem('token')
+    set({ token: null, user: null, messages: [] })
+  },
+
   setSessionId: async (sessionId: string) => {
     set({ sessionId, isLoading: true })
     
@@ -98,7 +139,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   sendMessage: async (content: string) => {
-    const { sessionId } = get()
+    const { sessionId, settings } = get()
     set({ isLoading: true })
     
     // Add user message
@@ -127,7 +168,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       // Use existing backend API endpoint
       const response = await axios.post(`${API_BASE_URL}/agent/run`, {
         question: content,
-        session_id: sessionId
+        session_id: sessionId,
+        settings: settings
       })
       
       // Мы больше не ждем фиксированное время и не запрашиваем историю вручную.
@@ -224,6 +266,25 @@ export const useAppStore = create<AppState>((set, get) => ({
     } finally {
       // Всегда очищаем локальное состояние и сбрасываем на дефолтную сессию
       set({ messages: [], sessionId: 'default' })
+    }
+  },
+
+  updateSettings: async (newSettings: Partial<AppSettings>) => {
+    const { settings, user } = get()
+    const updatedSettings = { ...settings, ...newSettings }
+    set({ settings: updatedSettings, isLoading: true })
+    
+    try {
+      await axios.post(`${API_BASE_URL}/session/settings`, {
+        session_id: get().sessionId,
+        user_id: user?.id || 'tmp',
+        settings: updatedSettings
+      })
+      set({ isLoading: false })
+    } catch (error) {
+      console.error('Error updating settings:', error)
+      set({ isLoading: false })
+      throw error
     }
   },
 }))

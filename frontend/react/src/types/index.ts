@@ -26,16 +26,38 @@ export interface Feature {
   color: string;
 }
 
+export interface LLMSettings {
+  provider: 'openai' | 'openrouter' | 'mistral' | 'zai';
+  model: string;
+}
+
+export interface AppSettings {
+  agent: LLMSettings;
+  rag: LLMSettings;
+  quiz: LLMSettings;
+}
+
+export interface User {
+  id: string;
+  username: string;
+}
+
 export interface AppState {
+  user: User | null;
+  token: string | null;
   messages: ChatMessage[];
   isLoading: boolean;
   selectedFile: File | null;
   activeTab: string;
   latexEnabled: boolean;
   sessionId: string;
+  settings: AppSettings;
   
   // Actions
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => void;
   setSessionId: (sessionId: string) => Promise<void>;
+  updateSettings: (settings: Partial<AppSettings>) => Promise<void>;
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
   sendMessage: (content: string) => Promise<void>;
   executeAction: (action: string, data?: any) => Promise<any>;

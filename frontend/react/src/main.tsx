@@ -8,6 +8,7 @@ import { Header } from './components/Header'
 import { ChatInterface } from './components/ChatInterface'
 import { Features } from './components/Features'
 import { Settings } from './components/Settings'
+import { Login } from './components/Login'
 import { useAppStore } from './store/appStore'
 
 // Russian theme
@@ -51,12 +52,18 @@ const theme = createTheme({
 })
 
 const AppContent: React.FC = () => {
-  const { activeTab, setActiveTab, sessionId, setSessionId } = useAppStore()
+  const { activeTab, setActiveTab, sessionId, setSessionId, token } = useAppStore()
 
   // Инициализация WebSocket при старте
   React.useEffect(() => {
-    setSessionId(sessionId)
-  }, [])
+    if (token) {
+      setSessionId(sessionId)
+    }
+  }, [token])
+
+  if (!token) {
+    return <Login />
+  }
 
   const renderContent = () => {
     switch (activeTab) {
