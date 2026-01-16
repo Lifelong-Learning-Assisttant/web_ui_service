@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../store/appStore';
-import { Terminal, MessageSquare, BookOpen, Send, Edit3, Eye } from 'lucide-react';
+import { Terminal, MessageSquare, BookOpen, Send, Edit3, Eye, ChevronUp, ChevronDown, MinusSquare, PlusSquare } from 'lucide-react';
 import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
 
@@ -15,8 +15,32 @@ export const NetrunnerDeck: React.FC<NetrunnerDeckProps> = ({ mode }) => {
   const [activeTab, setActiveTab] = useState<DeckTab>(mode === 'algos' ? 'TERMINAL' : 'AI_SYNC');
   const [inputMode, setInputMode] = useState<InputMode>('EDITOR');
   const [inputText, setInputText] = useState('');
+  const [height, setHeight] = useState(33); // в процентах vh
+  const [isMinimized, setIsMinimized] = useState(false);
   
-  const { sendMessage, isLoading, messages } = useAppStore();
+  const { sendMessage, isLoading } = useAppStore();
+  const isResizing = useRef(false);
+
+  const startResizing = (e: React.MouseEvent) => {
+    isResizing.current = true;
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', stopResizing);
+  };
+
+  const stopResizing = () => {
+    isResizing.current = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', stopResizing);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isResizing.current) return;
+    const newHeight = ((window.innerHeight - e.clientY) / window.innerHeight) * 100;
+    if (newHeight > 10 && newHeight < 80) {
+      setHeight(newHeight);
+      if (isMinimized) setIsMinimized(false);
+    }
+  };
 
   const handleSend = async () => {
     if (inputText.trim() && !isLoading) {
@@ -27,9 +51,19 @@ export const NetrunnerDeck: React.FC<NetrunnerDeckProps> = ({ mode }) => {
   };
 
   return (
-    <div className="h-[33vh] border-t border-primary/20 bg-surface-dark/80 backdrop-blur-md flex flex-col overflow-hidden relative">
+    <div
+      style={{ height: isMinimized ? '40px' : `${height}vh` }}
+      className={`border-t border-primary/20 bg-surface-dark/80 backdrop-blur-md flex flex-col overflow-hidden relative transition-[height] duration-300 ease-in-out ${isMinimized ? 'h-[40px]' : ''}`}
+    >
+      {/* Resize Handle */}
+      <div
+        onMouseDown={startResizing}
+        className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize hover:bg-primary/40 z-50 transition-colors"
+      />
+
       {/* Tab Switcher */}
-      <div className="flex border-b border-slate-800 bg-black/40 shrink-0">
+      <div className="flex border-b border-slate-800 bg-black/40 shrink-0 items-center justify-between pr-2">
+        <div className="flex">
         {[
           { id: 'TERMINAL', icon: <Terminal className="w-3 h-3" />, label: 'TERMINAL', modes: ['algos'] },
           { id: 'AI_SYNC', icon: <MessageSquare className="w-3 h-3" />, label: 'AI_SYNC', modes: ['chat', 'theory', 'algos'] },
@@ -48,6 +82,17 @@ export const NetrunnerDeck: React.FC<NetrunnerDeckProps> = ({ mode }) => {
             {tab.label}
           </button>
         ))}
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="p-1 text-slate-500 hover:text-primary transition-colors"
+            title={isMinimized ? "Restore Deck" : "Minimize Deck"}
+          >
+            {isMinimized ? <PlusSquare className="w-4 h-4" /> : <MinusSquare className="w-4 h-4" />}
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden">

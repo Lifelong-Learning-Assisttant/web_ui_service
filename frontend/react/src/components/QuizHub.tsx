@@ -1,8 +1,8 @@
 import React from 'react';
 import { useAppStore } from '../store/appStore';
 import { NetrunnerDeck } from './NetrunnerDeck';
+import { UnifiedChat } from './UnifiedChat';
 import { BlockMath } from 'react-katex';
-import { motion } from 'framer-motion';
 import { Brain, Network, Activity } from 'lucide-react';
 
 export const QuizHub: React.FC = () => {
@@ -75,29 +75,8 @@ export const QuizHub: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-5 bg-gradient-to-b from-black/20 to-transparent pb-6 cyber-scroll">
-            {messages.filter(m => m.role === 'assistant' || m.role === 'user').slice(-5).map((msg, i) => (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex flex-col ${msg.role === 'user' ? 'items-end self-end' : 'items-start'} max-w-[90%]`}
-              >
-                <div className="flex items-center gap-2 mb-1 px-1">
-                  <span className={`text-[10px] font-display font-bold tracking-wider ${msg.role === 'user' ? 'text-accent-cyan' : 'text-primary'}`}>
-                    {msg.role === 'user' ? 'USER_ROOT' : 'AI_CORE'}
-                  </span>
-                  <span className="text-[8px] text-slate-600 font-mono">{msg.timestamp.toLocaleTimeString()}</span>
-                </div>
-                <div className={`p-3 rounded-2xl shadow-lg text-xs md:text-sm font-mono leading-relaxed ${
-                  msg.role === 'user' 
-                    ? 'bg-accent-cyan/5 border border-accent-cyan/20 rounded-tr-none text-right' 
-                    : 'bg-surface-dark border border-slate-700/50 rounded-tl-none'
-                }`}>
-                  {msg.content}
-                </div>
-              </motion.div>
-            ))}
+          <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-black/20 to-transparent pb-6 cyber-scroll">
+            <UnifiedChat limit={5} showSystem={false} />
           </div>
         </div>
       </div>

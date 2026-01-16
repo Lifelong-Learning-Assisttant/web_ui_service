@@ -11,6 +11,7 @@ import { Profile, ActivityBar } from './components/Profile'
 import { QuizHub } from './components/QuizHub'
 import { AlgoLab } from './components/AlgoLab'
 import { useAppStore } from './store/appStore'
+import { MessageSquare, BookOpen, Code2, Settings as SettingsIcon, User } from 'lucide-react'
 
 const AppContent: React.FC = () => {
   const { activeTab, setActiveTab, sessionId, setSessionId, token, user } = useAppStore()
@@ -55,7 +56,14 @@ const AppContent: React.FC = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-14 border-b border-white/10 bg-surface-dark/90 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-50 sticky top-0">
           <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-primary">chat_bubble</span>
+            <div className="flex items-center justify-center w-8 h-8 rounded bg-primary/10 border border-primary/30 shadow-[0_0_10px_rgba(0,255,204,0.2)]">
+              {activeTab === 'chat' && <MessageSquare className="w-4 h-4 text-primary" />}
+              {activeTab === 'theory' && <BookOpen className="w-4 h-4 text-primary" />}
+              {activeTab === 'algos' && <Code2 className="w-4 h-4 text-primary" />}
+              {activeTab === 'settings' && <SettingsIcon className="w-4 h-4 text-primary" />}
+              {activeTab === 'profile' && <User className="w-4 h-4 text-primary" />}
+              {activeTab === 'features' && <div className="w-2 h-2 bg-primary animate-pulse rounded-full" />}
+            </div>
             <h1 className="font-display text-sm tracking-[0.3em] font-bold text-white uppercase">
               {activeTab === 'chat' ? 'NEURAL_CHAT' : activeTab.toUpperCase()}
             </h1>

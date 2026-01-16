@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/appStore';
 import { NetrunnerDeck } from './NetrunnerDeck';
+import { UnifiedChat } from './UnifiedChat';
 import { motion } from 'framer-motion';
 import { Code2, Play, Maximize2, Bolt, Brain, User, Network } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -109,30 +110,8 @@ export const AlgoLab: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-6 cyber-scroll relative">
-            <div className="flex gap-3">
-              <div className="w-8 h-8 rounded bg-secondary/10 border border-secondary/30 flex items-center justify-center shrink-0">
-                <Brain className="w-4 h-4 text-secondary" />
-              </div>
-              <div className="flex-1 max-w-[90%] space-y-1">
-                <span className="text-[8px] font-bold text-secondary uppercase tracking-[0.2em]">AI_CORE</span>
-                <div className="bg-[#0f172a] p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl border border-white/10 border-l-2 border-l-secondary text-[11px] leading-relaxed text-slate-300 shadow-xl">
-                  The complexity of your <span className="text-secondary">binary_search</span> is correct. Would you like to analyze the worst-case stack depth next?
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-3 flex-row-reverse">
-              <div className="w-8 h-8 rounded bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
-                <User className="w-4 h-4 text-primary" />
-              </div>
-              <div className="flex-1 max-w-[90%] space-y-1 text-right">
-                <span className="text-[8px] font-bold text-primary uppercase tracking-[0.2em]">USER_ROOT</span>
-                <div className="bg-[#0f172a] p-3 rounded-tl-xl rounded-bl-xl rounded-br-xl border border-white/10 border-r-2 border-r-primary text-[11px] leading-relaxed text-slate-300 shadow-xl text-left inline-block">
-                  Yes, show me the memory allocation for large recursive calls.
-                </div>
-              </div>
-            </div>
+          <div className="flex-1 overflow-y-auto p-4 cyber-scroll relative">
+            <UnifiedChat limit={10} showSystem={false} />
           </div>
         </section>
       </div>
