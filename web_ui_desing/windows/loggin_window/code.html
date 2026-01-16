@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Combined Neural Login Interface</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Orbitron:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#00FFCC", // Cyan
+              secondary: "#DAFF00", // Vibrant Lime-Green
+              "background-dark": "#05070a", 
+              "surface-dark": "#0e1116",
+            },
+            fontFamily: {
+              display: ["Orbitron", "sans-serif"],
+              mono: ["JetBrains Mono", "monospace"],
+            },
+            animation: {
+                'rain': 'rain 20s linear infinite',
+                'rain-fast': 'rain 12s linear infinite',
+                'scan-vertical': 'scan-vertical 6s ease-in-out infinite',
+                'scan-vertical-slow': 'scan-vertical 12s ease-in-out infinite',
+                'float-slow': 'float 8s ease-in-out infinite',
+                'float-delayed': 'float 8s ease-in-out infinite 4s',
+                'pulse-glow': 'pulse-glow 4s ease-in-out infinite',
+                'node-pulse': 'node-pulse 3s ease-in-out infinite',
+                'spin-slow': 'spin 12s linear infinite',
+                'spin-reverse-slow': 'spin-reverse 8s linear infinite',
+            },
+            keyframes: {
+                rain: {
+                    '0%': { transform: 'translateY(0%)' },
+                    '100%': { transform: 'translateY(-50%)' },
+                },
+                'scan-vertical': {
+                    '0%': { top: '0%', opacity: '0.4' },
+                    '50%': { top: '95%', opacity: '1' },
+                    '100%': { top: '0%', opacity: '0.4' },
+                },
+                float: {
+                    '0%, 100%': { transform: 'translateY(0px)' },
+                    '50%': { transform: 'translateY(-15px)' },
+                },
+                'pulse-glow': {
+                    '0%, 100%': { opacity: '0.3' },
+                    '50%': { opacity: '0.6' },
+                },
+                'node-pulse': {
+                    '0%, 100%': { r: '3', opacity: '0.6' },
+                    '50%': { r: '4', opacity: '1' },
+                },
+                spin: {
+                    from: { transform: 'rotate(0deg)' },
+                    to: { transform: 'rotate(360deg)' },
+                },
+                'spin-reverse': {
+                    from: { transform: 'rotate(360deg)' },
+                    to: { transform: 'rotate(0deg)' },
+                }
+            }
+          },
+        },
+      };
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply font-mono bg-background-dark text-slate-300;
+                -webkit-tap-highlight-color: transparent;
+            }
+        }
+        .cyber-border {
+            position: relative;
+            background: rgba(14, 17, 22, 0.9);
+            border: 1px solid rgba(0, 255, 204, 0.2);
+            clip-path: polygon(
+                0 15px, 15px 0, 
+                calc(100% - 15px) 0, 100% 15px, 
+                100% calc(100% - 15px), calc(100% - 15px) 100%, 
+                15px 100%, 0 calc(100% - 15px)
+            );
+        }
+        .cyber-input {
+            @apply bg-black/40 border border-primary/20 text-primary p-3 focus:border-primary/60 outline-none transition-all placeholder:text-primary/30;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+        }
+        .neon-text-cyan { text-shadow: 0 0 10px rgba(0, 255, 204, 0.5); }
+        .neon-text-lime { text-shadow: 0 0 10px rgba(218, 255, 0, 0.5); }
+        .neon-glow-cyan { box-shadow: 0 0 15px rgba(0, 255, 204, 0.2); }.group:hover .interactive-layer-1 {
+            transform: translate(10px, -10px);
+        }
+        .group:hover .interactive-layer-2 {
+            transform: translate(-15px, 5px);
+        }
+        .interactive-layer-1, .interactive-layer-2 {
+            transition: transform 1s ease-out;
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+        .mask-gradient-v {
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+            mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen relative overflow-hidden bg-background-dark group">
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#0f1319_0%,#05070a_100%)]"></div>
+<svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<filter height="200%" id="glow" width="200%" x="-50%" y="-50%">
+<feGaussianBlur result="coloredBlur" stdDeviation="2.5"></feGaussianBlur>
+<feMerge>
+<feMergeNode in="coloredBlur"></feMergeNode>
+<feMergeNode in="SourceGraphic"></feMergeNode>
+</feMerge>
+</filter>
+</defs>
+<g class="interactive-layer-1 animate-float-slow opacity-20" stroke="#DAFF00" stroke-width="0.5">
+<line x1="10%" x2="25%" y1="10%" y2="25%"></line>
+<line x1="25%" x2="15%" y1="25%" y2="45%"></line>
+<line x1="15%" x2="40%" y1="45%" y2="35%"></line>
+<line x1="40%" x2="60%" y1="35%" y2="15%"></line>
+<line x1="60%" x2="80%" y1="15%" y2="25%"></line>
+<line x1="80%" x2="70%" y1="25%" y2="55%"></line>
+<line x1="70%" x2="90%" y1="55%" y2="75%"></line>
+<line x1="25%" x2="50%" y1="25%" y2="50%"></line>
+<line x1="50%" x2="70%" y1="50%" y2="55%"></line>
+<line x1="10%" x2="30%" y1="80%" y2="70%"></line>
+<line x1="30%" x2="50%" y1="70%" y2="90%"></line>
+<line x1="50%" x2="70%" y1="90%" y2="80%"></line>
+</g>
+<g class="interactive-layer-1 animate-float-slow opacity-40" fill="#00FFCC" filter="url(#glow)">
+<circle cx="10%" cy="10%" r="2"></circle>
+<circle cx="25%" cy="25%" r="3"></circle>
+<circle cx="15%" cy="45%" r="2"></circle>
+<circle cx="40%" cy="35%" r="2"></circle>
+<circle cx="60%" cy="15%" r="3"></circle>
+<circle cx="80%" cy="25%" r="2"></circle>
+<circle cx="70%" cy="55%" r="3"></circle>
+<circle cx="90%" cy="75%" r="2"></circle>
+<circle cx="50%" cy="50%" r="2"></circle>
+<circle cx="10%" cy="80%" r="2"></circle>
+<circle cx="30%" cy="70%" r="3"></circle>
+<circle cx="50%" cy="90%" r="2"></circle>
+<circle cx="70%" cy="80%" r="2"></circle>
+</g>
+<g class="interactive-layer-2 animate-float-delayed" opacity="0.6" stroke="#DAFF00" stroke-width="1">
+<line class="animate-pulse-glow" x1="5%" x2="20%" y1="40%" y2="60%"></line>
+<line class="animate-pulse-glow" style="animation-delay: 1s;" x1="20%" x2="45%" y1="60%" y2="55%"></line>
+<line class="animate-pulse-glow" style="animation-delay: 2s;" x1="45%" x2="65%" y1="55%" y2="75%"></line>
+<line class="animate-pulse-glow" style="animation-delay: 0.5s;" x1="65%" x2="95%" y1="75%" y2="60%"></line>
+<line class="animate-pulse-glow" style="animation-delay: 1.5s;" x1="35%" x2="45%" y1="15%" y2="55%"></line>
+<line class="animate-pulse-glow" style="animation-delay: 2.5s;" x1="65%" x2="75%" y1="75%" y2="95%"></line>
+</g>
+<g class="interactive-layer-2 animate-float-delayed" fill="#00FFCC" filter="url(#glow)">
+<circle class="animate-node-pulse" cx="5%" cy="40%" r="3"></circle>
+<circle class="animate-node-pulse" cx="20%" cy="60%" r="4" style="animation-delay: 1s;"></circle>
+<circle class="animate-node-pulse" cx="45%" cy="55%" r="3" style="animation-delay: 2s;"></circle>
+<circle class="animate-node-pulse" cx="65%" cy="75%" r="5" style="animation-delay: 0.5s;"></circle>
+<circle class="animate-node-pulse" cx="95%" cy="60%" r="3" style="animation-delay: 1.5s;"></circle>
+<circle class="animate-node-pulse" cx="35%" cy="15%" r="3" style="animation-delay: 0.8s;"></circle>
+<circle class="animate-node-pulse" cx="75%" cy="95%" r="2" style="animation-delay: 2.2s;"></circle>
+</g>
+</svg>
+<div class="absolute top-0 right-0 h-full w-32 md:w-64 z-10 mask-gradient-v overflow-hidden flex justify-end pr-2 md:pr-6">
+<div class="flex gap-2 md:gap-6 opacity-60">
+<div class="flex flex-col text-[10px] md:text-xs font-mono text-primary/80 animate-rain whitespace-nowrap leading-relaxed">
+<div class="flex flex-col">
+<span class="opacity-50">0x4F:AE</span><span>DATA_PKT</span><span class="text-secondary">NULL_PTR</span><span>0010101</span>
+<span class="opacity-30">------</span><span>SYS_OVR</span><span>MEM_LEAK</span><span class="opacity-50">0xFF:00</span>
+<span>SCANNING</span><span>... ...</span><span>0x2B:4C</span><span>NET_RDY</span>
+<span class="text-secondary opacity-70">ERR_404</span><span>BUFFER</span><span>0101110</span><span>LINK_UP</span>
+</div>
+<div class="flex flex-col">
+<span class="opacity-50">0x4F:AE</span><span>DATA_PKT</span><span class="text-secondary">NULL_PTR</span><span>0010101</span>
+<span class="opacity-30">------</span><span>SYS_OVR</span><span>MEM_LEAK</span><span class="opacity-50">0xFF:00</span>
+<span>SCANNING</span><span>... ...</span><span>0x2B:4C</span><span>NET_RDY</span>
+<span class="text-secondary opacity-70">ERR_404</span><span>BUFFER</span><span>0101110</span><span>LINK_UP</span>
+</div>
+<div class="flex flex-col">
+<span class="opacity-50">0x4F:AE</span><span>DATA_PKT</span><span class="text-secondary">NULL_PTR</span><span>0010101</span>
+<span class="opacity-30">------</span><span>SYS_OVR</span><span>MEM_LEAK</span><span class="opacity-50">0xFF:00</span>
+<span>SCANNING</span><span>... ...</span><span>0x2B:4C</span><span>NET_RDY</span>
+<span class="text-secondary opacity-70">ERR_404</span><span>BUFFER</span><span>0101110</span><span>LINK_UP</span>
+</div>
+</div>
+<div class="hidden md:flex flex-col text-[10px] md:text-xs font-mono text-secondary/50 animate-rain-fast whitespace-nowrap leading-relaxed mt-12">
+<div class="flex flex-col">
+<span>ROOT_ACC</span><span class="opacity-40">DENIED</span><span>0x00000</span><span>TRY_AGAIN</span>
+<span>------</span><span>PORT_22</span><span>SSH_KEY</span><span>VERIFIED</span>
+<span>LOG_OUT</span><span>TRACE_ON</span><span>PROXY_1</span><span>VPN_TUN</span>
+</div>
+<div class="flex flex-col">
+<span>ROOT_ACC</span><span class="opacity-40">DENIED</span><span>0x00000</span><span>TRY_AGAIN</span>
+<span>------</span><span>PORT_22</span><span>SSH_KEY</span><span>VERIFIED</span>
+<span>LOG_OUT</span><span>TRACE_ON</span><span>PROXY_1</span><span>VPN_TUN</span>
+</div>
+<div class="flex flex-col">
+<span>ROOT_ACC</span><span class="opacity-40">DENIED</span><span>0x00000</span><span>TRY_AGAIN</span>
+<span>------</span><span>PORT_22</span><span>SSH_KEY</span><span>VERIFIED</span>
+<span>LOG_OUT</span><span>TRACE_ON</span><span>PROXY_1</span><span>VPN_TUN</span>
+</div>
+</div>
+</div>
+</div>
+<div class="absolute inset-0 bg-[linear-gradient(rgba(0,255,204,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,204,0.03)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20 pointer-events-none"></div>
+</div>
+<div class="relative z-40 w-full min-h-screen p-4 md:p-12 flex flex-col items-center justify-center md:items-start md:justify-start">
+<main class="w-full max-w-sm cyber-border p-1 relative backdrop-blur-md shadow-[0_0_30px_rgba(0,0,0,0.7)] mt-4 md:mt-16 md:ml-12 border-t border-primary/30">
+<div class="bg-surface-dark/90 p-6 md:p-8 space-y-6 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-transparent pointer-events-none"></div>
+<header class="text-left space-y-1 relative z-10">
+<div class="flex items-center gap-2 text-primary/60 mb-1">
+<span class="w-1.5 h-1.5 bg-primary animate-pulse"></span>
+<span class="text-[9px] tracking-[0.2em] font-bold uppercase">System_Entry</span>
+</div>
+<h1 class="font-display text-2xl font-bold text-white neon-text-cyan tracking-tight leading-none">
+                        CYBER ML &amp; DL<br/>
+<span class="text-secondary neon-text-lime text-xl">INTERVIEW SIMULATOR</span>
+</h1>
+</header>
+<div class="space-y-6 relative z-10">
+<div class="relative w-full aspect-video border border-primary/20 bg-black overflow-hidden flex flex-col items-center justify-center group shadow-inner">
+<div class="absolute inset-0 bg-[linear-gradient(rgba(0,255,204,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,204,0.05)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+<div class="absolute top-2 right-2 flex flex-col items-end space-y-0.5">
+<div class="w-8 h-[1px] bg-primary/50"></div>
+<div class="w-4 h-[1px] bg-primary/30"></div>
+</div>
+<div class="absolute bottom-2 left-2 flex flex-col space-y-0.5">
+<div class="w-2 h-2 border-l border-b border-primary/50"></div>
+</div>
+<div class="absolute top-2 left-2 text-[8px] text-primary/40 font-mono">CAM_04 [OFFLINE]</div>
+<div class="relative z-10 flex items-center justify-center opacity-90">
+<div class="w-32 h-32 rounded-full border border-primary/20"></div>
+<div class="absolute w-24 h-24 rounded-full border border-dashed border-primary/50 animate-spin-slow"></div>
+</div>
+<div class="absolute inset-x-0 h-1 bg-secondary blur-[4px] shadow-[0_0_15px_#DAFF00,0_0_8px_#DAFF00] animate-scan-vertical-slow z-20"></div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-30 space-y-1">
+<div class="text-[10px] text-yellow-300 font-bold tracking-widest bg-black/70 px-2 py-0.5 border border-yellow-300 shadow-[0_0_5px_rgba(253,224,71,0.5)]">IDENTITY_NOT_FOUND</div>
+<div class="text-[8px] text-secondary font-mono animate-pulse drop-shadow-[0_0_2px_rgba(218,255,0,0.8)]">SCANNING_UNREGISTERED_SUBJECT...</div>
+</div>
+</div>
+<form class="space-y-5" onsubmit="event.preventDefault();">
+<div class="space-y-2">
+<label class="text-[9px] text-primary/60 font-bold tracking-widest uppercase ml-1">NEURAL_ID</label>
+<div class="relative">
+<input class="cyber-input w-full font-mono text-sm pl-10" placeholder="USER_REF_#" type="text"/>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary/40 text-lg">fingerprint</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-[9px] text-primary/60 font-bold tracking-widest uppercase ml-1">ACCESS_CODE</label>
+<div class="relative">
+<input class="cyber-input w-full font-mono text-sm pl-10" placeholder="••••••••" type="password"/>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary/40 text-lg">key</span>
+</div>
+</div>
+<div class="pt-2 space-y-4">
+<button class="w-full bg-primary text-black font-display font-bold text-sm py-4 tracking-[0.2em] hover:bg-white hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all active:scale-95 neon-glow-cyan" style="clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);">
+                                SYNC IDENTITY
+                            </button>
+<div class="flex items-center justify-between text-[10px] font-bold">
+<a class="text-slate-500 hover:text-secondary transition-colors uppercase tracking-widest flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-sm">refresh</span>
+                                    RE-LINK
+                                </a>
+<a class="text-primary/40 hover:text-primary transition-colors uppercase tracking-widest" href="#">Forgot Trace?</a>
+</div>
+</div>
+</form>
+</div>
+</div>
+<div class="absolute -top-[1px] -left-[1px] w-4 h-4 border-t border-l border-secondary"></div>
+<div class="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b border-r border-secondary"></div>
+</main>
+</div>
+<footer class="fixed bottom-0 left-0 right-0 h-10 border-t border-primary/10 bg-background-dark/95 backdrop-blur-md px-6 flex items-center justify-between z-50">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_#00FFCC]"></div>
+<span class="text-[9px] text-primary font-bold tracking-widest uppercase">SYSTEM_STATUS: READY</span>
+</div>
+<div class="hidden sm:flex items-center gap-2 opacity-50">
+<span class="w-[1px] h-3 bg-primary/40"></span>
+<span class="text-[9px] text-primary/60 font-bold uppercase tracking-widest">NET_IO: ACTIVE</span>
+</div>
+</div>
+<div class="flex items-center gap-4 text-[9px] font-mono text-slate-600">
+<span>V_3.0.1</span>
+</div>
+</footer>
+</body></html>

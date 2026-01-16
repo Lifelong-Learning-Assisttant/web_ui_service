@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Theory Quiz with Unified Deck Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Orbitron:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#00FFCC",
+                        secondary: "#9D00FF",
+                        "background-dark": "#0A0E14",
+                        "surface-dark": "#161B22",
+                        "accent-blue": "#00D1FF",
+                        "lime-green": "#CCFF00",
+                    },
+                    fontFamily: {
+                        display: ["Orbitron", "sans-serif"],
+                        mono: ["JetBrains Mono", "monospace"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "4px",
+                        'xl': '12px',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                },
+            },
+        };
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply font-mono bg-background-dark text-slate-200 overflow-hidden h-screen flex flex-col;
+                -webkit-tap-highlight-color: transparent;
+            }
+        }
+        .glass-panel {
+            background: rgba(22, 27, 34, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 204, 0.1);
+        }
+        .active-tab-glow {
+            box-shadow: 0 -2px 10px rgba(0, 255, 204, 0.4);
+            border-bottom: 2px solid #00FFCC;
+        }
+        .neural-graph-bg {
+            background-image: radial-gradient(circle at 2px 2px, rgba(0, 255, 204, 0.05) 1px, transparent 0);
+            background-size: 24px 24px;
+        }
+        .segment-glow {
+            box-shadow: 0 0 8px rgba(0, 255, 204, 0.6);
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00FFCC;
+            border-radius: 10px;
+        }
+        .split-pane {
+            @apply flex-1 overflow-hidden flex flex-col;
+        }
+        .vertical-text {
+            writing-mode: vertical-lr;
+            text-orientation: mixed;
+        }
+    </style>
+<style>
+        body {
+          min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="neural-graph-bg">
+<header class="h-14 flex items-center px-4 border-b border-slate-800 bg-surface-dark z-50 shrink-0 shadow-lg">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">psychology</span>
+<h1 class="font-display text-sm tracking-widest text-primary font-bold uppercase">QUIZZ_MODE::SYNC</h1>
+</div>
+</header>
+<div class="flex-1 flex overflow-hidden">
+<nav class="w-16 flex flex-col items-center py-6 gap-8 border-r border-slate-800 bg-surface-dark shrink-0 z-40">
+<button class="p-2 rounded-lg text-slate-400 hover:text-primary transition-colors group relative">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="absolute right-2 top-2 w-1.5 h-1.5 bg-primary rounded-full hidden group-hover:block shadow-[0_0_5px_#00FFCC]"></span>
+</button>
+<button class="p-2 rounded-lg text-primary bg-primary/10 transition-colors shadow-[0_0_10px_rgba(0,255,204,0.1)]">
+<span class="material-symbols-outlined">menu_book</span>
+</button>
+<button class="p-2 rounded-lg text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">terminal</span>
+</button>
+<button class="p-2 rounded-lg text-slate-400 hover:text-primary transition-colors mt-auto">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</nav>
+<main class="flex-1 flex flex-col overflow-hidden relative">
+<div class="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
+<div class="split-pane border-b lg:border-b-0 lg:border-r border-slate-800 lg:w-1/2 relative">
+<div class="absolute inset-0 overflow-y-auto p-4 md:p-6 pb-20">
+<div class="flex flex-col gap-2 mb-6">
+<div class="flex justify-between items-end mb-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xs">monitoring</span>
+<span class="text-[10px] font-display text-primary tracking-widest uppercase font-bold">EVALUATION PROGRESS</span>
+</div>
+<div class="text-[10px] font-display text-primary/80 font-bold tracking-widest">UNIT 03 / 10</div>
+</div>
+<div class="flex gap-1 h-1.5">
+<div class="flex-1 bg-primary segment-glow rounded-sm"></div>
+<div class="flex-1 bg-primary segment-glow rounded-sm"></div>
+<div class="flex-1 bg-primary segment-glow rounded-sm"></div>
+<div class="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-sm"></div>
+<div class="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-sm"></div>
+<div class="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-sm"></div>
+<div class="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-sm"></div>
+<div class="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-sm"></div>
+<div class="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-sm"></div>
+<div class="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-sm"></div>
+</div>
+</div>
+<section class="glass-panel p-5 md:p-6 rounded-xl border-l-4 border-l-primary mb-6 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+<div class="flex items-center gap-3 mb-5">
+<div class="p-2 bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined text-primary text-xl">psychology</span>
+</div>
+<div>
+<h2 class="font-display text-primary text-sm md:text-base uppercase tracking-wider font-bold">Sync Target: Chain Rule</h2>
+<p class="text-[10px] text-slate-500 font-mono tracking-tight uppercase">TOPOLOGY: BACKPROPAGATION</p>
+</div>
+</div>
+<div class="space-y-5 text-sm leading-relaxed text-slate-300">
+<div class="space-y-2">
+<p><span class="text-primary font-bold uppercase tracking-tighter text-xs mr-2">Goal:</span> Deep understanding of the derivative distribution process across complex neural topologies.</p>
+<p><span class="text-primary font-bold uppercase tracking-tighter text-xs mr-2">Concept:</span> The chain rule allows us to calculate the influence of weight <span class="text-accent-blue italic font-serif">w</span> on the final loss <span class="text-accent-blue italic font-serif">L</span> by traversing the computational graph backwards.</p>
+</div>
+<div class="p-4 md:p-6 bg-black/60 rounded-lg border border-slate-800 font-mono text-center overflow-x-auto relative group">
+<div class="absolute top-2 right-2 opacity-50">
+<span class="material-symbols-outlined text-[10px] text-slate-600">function</span>
+</div>
+<code class="text-accent-blue text-base sm:text-lg md:text-xl">\frac{\partial L}{\partial w} = \frac{\partial L}{\partial y} \cdot \frac{\partial y}{\partial x} \cdot \frac{\partial x}{\partial w}</code>
+</div>
+<p class="text-slate-500 italic text-xs pl-3 border-l-2 border-slate-700">
+                                    Observe how tokens flow through the network. A "gradient explosion" occurs when these partial derivatives exceed threshold 1.0 repeatedly during sequence unrolling.
+                                </p>
+</div>
+</section>
+</div>
+</div>
+<div class="split-pane bg-black/30 lg:w-1/2 flex flex-col relative z-10 border-t lg:border-t-0 border-primary/20 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+<div class="h-9 bg-surface-dark border-b border-slate-800 flex items-center justify-between px-4 shrink-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px] text-primary animate-pulse">hub</span>
+<span class="text-[10px] font-display font-bold text-slate-300 tracking-[0.15em] uppercase">Agent Context Window</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-lime-green shadow-[0_0_4px_#CCFF00]"></span>
+<span class="text-[9px] font-mono text-lime-green">ONLINE</span>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-5 bg-gradient-to-b from-black/20 to-transparent pb-6">
+<div class="flex flex-col items-start max-w-[90%] md:max-w-[85%] animate-in fade-in slide-in-from-left-2 duration-500">
+<div class="flex items-center gap-2 mb-1 pl-1">
+<span class="text-[10px] font-display text-primary font-bold tracking-wider">AI_CORE</span>
+<span class="text-[8px] text-slate-600 font-mono">14:02:33</span>
+</div>
+<div class="bg-surface-dark border border-slate-700/50 rounded-2xl rounded-tl-none p-3 shadow-lg relative group">
+<div class="absolute -left-[5px] top-0 w-[5px] h-[5px] border-t border-l border-slate-700/50 bg-surface-dark clip-path-polygon"></div>
+<p class="text-xs md:text-sm text-slate-300 leading-relaxed font-mono">
+                                    Describe how <span class="text-white bg-slate-800 px-1 rounded">Batch Normalization</span> affects the gradient flow during backpropagation.
+                                </p>
+<div class="mt-2 pt-2 border-t border-slate-800/50">
+<p class="text-[10px] text-slate-500 italic">Constraint: Use LaTeX for any mathematical notations.</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-end self-end max-w-[90%] md:max-w-[85%]">
+<div class="flex items-center gap-2 mb-1 pr-1">
+<span class="text-[8px] text-slate-600 font-mono">14:03:12</span>
+<span class="text-[10px] font-display text-accent-blue font-bold tracking-wider">USER_ROOT</span>
+</div>
+<div class="bg-accent-blue/5 border border-accent-blue/20 rounded-2xl rounded-tr-none p-3 shadow-lg text-right">
+<p class="text-xs md:text-sm text-slate-300 leading-relaxed font-mono">
+                                    The batch norm layer standardizes the inputs to a layer for each mini-batch.
+                                </p>
+</div>
+</div>
+<div class="flex flex-col items-start max-w-[90%] md:max-w-[85%] animate-in fade-in slide-in-from-left-2 duration-700">
+<div class="flex items-center gap-2 mb-1 pl-1">
+<span class="text-[10px] font-display text-primary font-bold tracking-wider">AI_CORE</span>
+<span class="text-[8px] text-slate-600 font-mono">14:03:45</span>
+</div>
+<div class="bg-surface-dark border border-primary/20 rounded-2xl rounded-tl-none p-3 shadow-lg shadow-primary/5">
+<p class="text-xs md:text-sm text-slate-300 leading-relaxed font-mono">
+                                    Correct. Now, formulate the partial derivative of the loss function with respect to the normalized input <code class="text-accent-blue">\hat{x}_i</code>.
+                                </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="shrink-0 h-[35vh] min-h-[260px] max-h-[320px] bg-[#0c0f14] border-t border-slate-700 flex z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] relative">
+<div class="w-14 flex flex-col items-center bg-[#11151b] border-r border-slate-800 pt-4 pb-2 z-20">
+<button class="group flex-1 w-full flex flex-col items-center gap-2 opacity-40 hover:opacity-80 transition-all mb-2 cursor-pointer">
+<div class="w-0.5 h-6 bg-slate-700 group-hover:bg-primary transition-colors"></div>
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-primary">forum</span>
+<span class="text-[9px] font-display font-bold text-slate-500 vertical-text rotate-180 tracking-widest py-2">AI_SYNC</span>
+</button>
+<button class="relative flex-[1.5] w-full flex flex-col items-center gap-2 mb-2 group cursor-default">
+<div class="absolute inset-x-0 top-0 bottom-0 bg-gradient-to-r from-lime-green/5 to-transparent opacity-100"></div>
+<div class="absolute left-0 top-2 bottom-2 w-[2px] bg-lime-green shadow-[0_0_8px_#CCFF00]"></div>
+<div class="w-0.5 h-6 bg-lime-green/50"></div>
+<span class="material-symbols-outlined text-[22px] text-lime-green drop-shadow-[0_0_8px_rgba(204,255,0,0.6)]">edit_note</span>
+<span class="text-[9px] font-display font-bold text-lime-green vertical-text rotate-180 tracking-widest py-2 shadow-lime-green/20">ANSWER</span>
+</button>
+</div>
+<div class="flex-1 flex flex-col bg-[#080a0e] relative overflow-hidden">
+<div class="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] z-0 pointer-events-none bg-[length:100%_4px,3px_100%]"></div>
+<div class="h-10 border-b border-slate-800 flex items-center bg-[#11151b] z-10 shrink-0">
+<button class="h-full px-5 flex items-center gap-2 border-b-2 border-lime-green bg-lime-green/5 text-lime-green transition-colors">
+<span class="material-symbols-outlined text-[16px]">code_blocks</span>
+<span class="text-[10px] font-display font-bold tracking-widest">EDITOR</span>
+</button>
+<button class="h-full px-5 flex items-center gap-2 border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-colors">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+<span class="text-[10px] font-display font-bold tracking-widest">PREVIEW</span>
+</button>
+<div class="ml-auto pr-4 flex items-center gap-2">
+<span class="text-[8px] font-mono text-slate-600 uppercase tracking-tight hidden sm:inline">Input_Mode: LaTeX_V2</span>
+<div class="w-1.5 h-1.5 bg-lime-green rounded-full shadow-[0_0_5px_#CCFF00] animate-pulse"></div>
+</div>
+</div>
+<div class="flex-1 relative z-10">
+<textarea class="w-full h-full bg-transparent border-none text-slate-300 font-mono text-xs sm:text-sm p-4 focus:ring-0 resize-none placeholder-slate-700 leading-relaxed focus:bg-white/5 transition-colors" placeholder="// Submit your answer via Neural Link...
+\frac{\partial \mathcal{L}}{\partial \hat{x}_i} = "></textarea>
+<div class="absolute bottom-4 right-4 flex items-center gap-3">
+<div class="hidden xs:flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded border border-slate-800 backdrop-blur-sm">
+<span class="material-symbols-outlined text-[10px] text-slate-500">token</span>
+<span class="text-[9px] font-mono text-slate-500"><span class="text-lime-green">24</span>/1024</span>
+</div>
+<button class="h-9 pl-4 pr-5 bg-lime-green hover:bg-[#b3ff00] text-black rounded-sm flex items-center gap-2 shadow-[0_0_20px_rgba(204,255,0,0.3)] transition-all hover:scale-105 active:scale-95 group">
+<span class="text-[11px] font-display font-bold tracking-widest">SYNC</span>
+<span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<footer class="h-8 bg-surface-dark border-t border-slate-800 px-4 flex items-center justify-between text-[10px] font-mono shrink-0 w-full z-50">
+<div class="flex items-center gap-4 overflow-x-auto no-scrollbar whitespace-nowrap">
+<div class="flex items-center gap-1.5">
+<div class="w-2 h-2 rounded-full bg-primary shadow-[0_0_5px_rgba(0,255,204,0.8)] animate-pulse"></div>
+<span class="text-primary/80 uppercase tracking-tighter">API: ACTIVE-MOCK-MODE</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[12px] text-lime-green">storage</span>
+<span class="text-slate-500 uppercase">DOCKER: V.8.2.1-LIVE</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[12px] text-primary">analytics</span>
+<span class="text-slate-500 uppercase">HEALTH: 100%</span>
+</div>
+</div>
+<div class="text-slate-600 flex items-center gap-3 shrink-0 ml-4">
+<span class="material-symbols-outlined text-[12px]">rebase_edit</span>
+<span class="hidden xs:inline">SYSTEM_V2.0.4-LATEST</span>
+</div>
+</footer>
+
+</body></html>

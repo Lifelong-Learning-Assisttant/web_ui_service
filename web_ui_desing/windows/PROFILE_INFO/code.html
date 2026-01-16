@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Profile Info Identity Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Orbitron:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#00FFCC", // Cyan
+              secondary: "#DAFF00", // Vibrant Lime-Green
+              accent: "#DAFF00", // Acid Green
+              "background-dark": "#0B0D11", 
+              "surface-dark": "#12161D",
+            },
+            fontFamily: {
+              display: ["Orbitron", "sans-serif"],
+              mono: ["JetBrains Mono", "monospace"],
+            },
+          },
+        },
+      };
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply font-mono bg-background-dark text-slate-300;
+                -webkit-tap-highlight-color: transparent;
+                background-image: 
+                    linear-gradient(rgba(0, 255, 204, 0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0, 255, 204, 0.03) 1px, transparent 1px);
+                background-size: 32px 32px;
+            }
+        }
+        .cyber-border {
+            position: relative;
+            background: rgba(18, 22, 29, 0.8);
+            border: 1px solid rgba(0, 255, 204, 0.2);
+            clip-path: polygon(
+                0 10px, 10px 0, 
+                calc(100% - 10px) 0, 100% 10px, 
+                100% calc(100% - 10px), calc(100% - 10px) 100%, 
+                10px 100%, 0 calc(100% - 10px)
+            );
+        }
+        .avatar-hud-frame {
+            position: relative;
+            padding: 12px;
+        }
+        .avatar-hud-frame::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 1px solid rgba(218, 255, 0, 0.3);
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%);
+        }
+        .avatar-hud-frame::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border: 1px solid rgba(0, 255, 204, 0.4);
+            clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 100%, 0 100%, 0 30%);
+            pointer-events: none;
+        }
+        .glitch-effect {
+            position: relative;
+        }
+        .glitch-effect::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: #DAFF00;
+            opacity: 0.5;
+            z-index: 10;
+            box-shadow: 0 0 10px #DAFF00;
+        }
+        .neon-text-cyan { text-shadow: 0 0 10px rgba(0, 255, 204, 0.7); }
+        .neon-text-lime { text-shadow: 0 0 10px rgba(218, 255, 0, 0.7); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #00FFCC; border-radius: 10px; }
+        @keyframes scan {
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 2px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 255, 204, 0.3); }
+        .sidebar-item-active {
+            @apply text-primary bg-primary/5;
+            border-right: 2px solid theme('colors.primary');
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen flex flex-col overflow-x-hidden">
+<header class="h-14 border-b border-white/10 bg-surface-dark/90 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-50 sticky top-0">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">chat_bubble</span>
+<h1 class="font-display text-sm tracking-[0.3em] font-bold text-white uppercase">PROFILE_INFO</h1>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex items-center gap-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+<span class="text-primary animate-pulse">Encryption: AES-256</span>
+<span class="text-secondary">Uptime: 99.9%</span>
+</div>
+<span class="material-symbols-outlined text-primary cursor-pointer hover:rotate-90 transition-transform duration-500">settings_input_component</span>
+</div>
+</header>
+<div class="flex-1 flex overflow-hidden">
+<nav class="w-16 flex flex-col items-center py-8 gap-10 border-r border-white/10 bg-background-dark shrink-0">
+<button class="p-2 text-slate-500 hover:text-primary transition-all hover:scale-110">
+<span class="material-symbols-outlined">chat_bubble</span>
+</button>
+<button class="p-2 text-slate-500 hover:text-primary transition-all hover:scale-110">
+<span class="material-symbols-outlined">menu_book</span>
+</button>
+<button class="p-2 text-slate-500 hover:text-primary transition-all hover:scale-110">
+<span class="material-symbols-outlined">terminal</span>
+</button>
+<button class="p-2 text-primary sidebar-item-active transition-all">
+<span class="material-symbols-outlined">person</span>
+</button>
+<div class="mt-auto flex flex-col items-center gap-6">
+<button class="p-2 text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</nav>
+<main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+<section class="cyber-border p-6 md:p-10 border-primary/30 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-2 opacity-20 pointer-events-none">
+<div class="text-[8px] leading-tight text-right">
+                        SYS_STATUS: OPTIMAL<br/>
+                        NEURAL_LOAD: 12%<br/>
+                        LATENCY: 0.002ms
+                    </div>
+</div>
+<div class="flex flex-col lg:flex-row gap-10 items-center lg:items-center">
+<div class="relative avatar-hud-frame group-hover:scale-[1.02] transition-transform duration-500">
+<div class="w-56 h-56 relative glitch-effect overflow-hidden bg-black">
+<img alt="Netrunner Portrait" class="w-full h-full object-cover grayscale contrast-125 brightness-75 hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDj83_Q_nIlzSi5LYryVMMqOGD0nSWwwbPkqAoKBdD7hC9MrUWwXUwxE_hJv5qQ-s4GRCflQgz4JEaItZIeY_aQcvAUBXPHBkGGqcPTRc-apGCrYGPRVdIaS4VbgkO9N7hP2ytaoJ1kalIaja2709U3tSv4qcVCqywterLkOMiP4HXyau6-cpksp2lkap5TlxTnPRdZvCBiXU37lc8qL5boYFjZJGNS2ws_X4akTrOWSsXY7paKPVuTn43DutEVk_mO7whIWqlbfrg"/>
+<div class="absolute inset-0 border border-primary/20 pointer-events-none"></div>
+<div class="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-primary shadow-[0_0_5px_rgba(0,255,204,1)]"></div>
+<div class="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-secondary shadow-[0_0_5px_rgba(218,255,0,1)]"></div>
+<div class="absolute top-1/2 left-0 w-full h-[1px] bg-secondary/20"></div>
+<div class="absolute left-1/2 top-0 w-[1px] h-full bg-secondary/20"></div>
+<div class="absolute top-0 left-0 w-full h-1 bg-primary/40 shadow-[0_0_10px_rgba(0,255,204,0.8)] animate-[scan_3s_linear_infinite] opacity-50"></div>
+</div>
+<div class="absolute -top-4 -left-4 bg-primary text-black px-2 py-0.5 text-[8px] font-bold uppercase tracking-tighter z-20">ID_VALIDATED</div>
+<div class="absolute -bottom-2 -right-4 bg-secondary text-black px-3 py-1 text-[10px] font-bold uppercase tracking-widest shadow-[0_0_15px_rgba(218,255,0,0.4)]">Sync_Active</div>
+</div>
+<div class="flex-1 w-full space-y-6">
+<div class="flex flex-col lg:flex-row justify-between items-baseline gap-4">
+<div>
+<div class="flex items-center gap-3 mb-1">
+<span class="w-2 h-2 bg-primary animate-pulse"></span>
+<span class="text-[10px] text-primary font-bold tracking-[0.4em] uppercase">Security Clearance: Omega</span>
+</div>
+<h2 class="font-display text-4xl md:text-6xl text-white neon-text-cyan tracking-tighter mb-2">USER_ID: 0x9F4B</h2>
+<div class="flex items-center gap-3">
+<div class="text-xs text-secondary font-bold tracking-[0.3em] uppercase">Neural Architect</div>
+<div class="h-[1px] w-24 bg-white/10"></div>
+</div>
+</div>
+<div class="font-display text-5xl md:text-7xl text-secondary italic opacity-80 neon-text-lime">LVL 42</div>
+</div>
+<div class="pt-2 space-y-3">
+<div class="flex justify-between text-[10px] font-bold">
+<span class="text-primary uppercase tracking-widest">Neural Link Synchronization</span>
+<span class="text-slate-400">4500 <span class="text-white">/ 5000 XP</span></span>
+</div>
+<div class="w-full h-3 bg-white/5 border border-white/10 p-[2px]">
+<div class="bg-gradient-to-r from-primary via-secondary to-secondary h-full shadow-[0_0_20px_rgba(0,255,204,0.3)]" style="width: 85%"></div>
+</div>
+<div class="flex justify-between text-[8px] text-slate-500 font-mono">
+<span>BUFFER_MODE: FAST</span>
+<span>THROUGHPUT: 1.2 GB/s</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="cyber-border p-5 group hover:border-primary/60 transition-all cursor-crosshair">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2 text-[10px] text-slate-400 uppercase tracking-widest">
+<span class="material-symbols-outlined text-lg text-primary">token</span>
+                            Neural Credits
+                        </div>
+</div>
+<div class="text-3xl lg:text-4xl font-display text-white group-hover:neon-text-cyan transition-all">1,240 <span class="text-xs text-primary ml-1">▲</span></div>
+</div>
+<div class="cyber-border p-5 group hover:border-secondary/60 transition-all cursor-crosshair border-secondary/20">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2 text-[10px] text-slate-400 uppercase tracking-widest">
+<span class="material-symbols-outlined text-lg text-secondary">bolt</span>
+                            Daily API Limit
+                        </div>
+</div>
+<div class="text-3xl lg:text-4xl font-display text-white">85<span class="text-slate-600 text-2xl">/100</span></div>
+</div>
+<div class="cyber-border p-5 group hover:border-secondary/60 transition-all cursor-crosshair border-secondary/20">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2 text-[10px] text-slate-400 uppercase tracking-widest">
+<span class="material-symbols-outlined text-lg text-secondary">verified</span>
+                            Quizzes
+                        </div>
+</div>
+<div class="text-3xl lg:text-4xl font-display text-white">128 <span class="text-xs text-secondary ml-1">12% ▲</span></div>
+</div>
+<div class="cyber-border p-5 group hover:border-primary/60 transition-all cursor-crosshair border-primary/20">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2 text-[10px] text-slate-400 uppercase tracking-widest">
+<span class="material-symbols-outlined text-lg text-primary">stars</span>
+                            Total Points
+                        </div>
+</div>
+<div class="text-3xl lg:text-4xl font-display text-white">42.5K <span class="text-xs text-primary ml-1">5% ▲</span></div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-8">
+<section class="lg:col-span-7 cyber-border p-8 border-primary/20 bg-surface-dark/40">
+<div class="flex items-center justify-between mb-8">
+<h3 class="font-display text-xs tracking-[0.5em] text-white uppercase opacity-80">Neural Matrix Proficiency</h3>
+</div>
+<div class="relative h-72 flex items-center justify-center">
+<svg class="w-full h-full max-w-sm overflow-visible" viewBox="0 0 100 100">
+<circle cx="50" cy="50" fill="none" r="10" stroke="rgba(0,255,204,0.1)" stroke-width="0.5"></circle>
+<circle cx="50" cy="50" fill="none" r="20" stroke="rgba(0,255,204,0.1)" stroke-width="0.5"></circle>
+<circle cx="50" cy="50" fill="none" r="30" stroke="rgba(0,255,204,0.1)" stroke-width="0.5"></circle>
+<circle cx="50" cy="50" fill="none" r="40" stroke="rgba(0,255,204,0.2)" stroke-width="0.5"></circle>
+<line stroke="rgba(0,255,204,0.1)" stroke-width="0.5" x1="50" x2="50" y1="10" y2="90"></line>
+<line stroke="rgba(0,255,204,0.1)" stroke-width="0.5" x1="10" x2="90" y1="50" y2="50"></line>
+<path class="drop-shadow-[0_0_8px_rgba(0,255,204,0.5)]" d="M 50 15 L 85 40 L 75 75 L 30 80 L 15 45 Z" fill="rgba(0, 255, 204, 0.1)" stroke="#00FFCC" stroke-width="1.5"></path>
+<text class="fill-primary font-bold text-[4px] uppercase tracking-widest" text-anchor="middle" x="50" y="5">Transformer</text>
+<text class="fill-slate-400 text-[3.5px] uppercase tracking-widest" text-anchor="start" x="92" y="52">RAG</text>
+<text class="fill-slate-400 text-[3.5px] uppercase tracking-widest" text-anchor="middle" x="75" y="94">Optimizers</text>
+<text class="fill-slate-400 text-[3.5px] uppercase tracking-widest" text-anchor="middle" x="25" y="94">CNN Arch</text>
+<text class="fill-slate-400 text-[3.5px] uppercase tracking-widest" text-anchor="end" x="8" y="52">RLHF</text>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="w-16 h-16 bg-primary/5 rounded-full blur-3xl"></div>
+<div class="w-10 h-10 rounded-full bg-background-dark border border-primary/50 flex items-center justify-center text-primary shadow-[0_0_15px_rgba(0,255,204,0.3)]">
+<span class="material-symbols-outlined text-2xl">electric_bolt</span>
+</div>
+</div>
+</div>
+</section>
+<section class="lg:col-span-5 cyber-border p-6 flex flex-col border-secondary/20">
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center gap-3">
+<div class="w-1 h-4 bg-secondary shadow-[0_0_8px_rgba(218,255,0,0.5)]"></div>
+<h3 class="font-display text-xs tracking-widest uppercase text-white">Transmission Log</h3>
+</div>
+<span class="text-[9px] font-bold text-secondary tracking-tighter animate-pulse">LIVE_FEED</span>
+</div>
+<div class="space-y-3 flex-1 overflow-y-auto max-h-[300px] pr-2 custom-scrollbar">
+<div class="p-3 bg-white/5 border-l-2 border-primary flex items-center justify-between hover:bg-white/10 transition-colors group">
+<div class="flex items-center gap-4">
+<span class="text-[10px] text-primary/60 font-mono">14:02</span>
+<div class="space-y-0.5">
+<div class="text-[11px] font-bold text-slate-200 uppercase group-hover:text-primary transition-colors">Backpropagation_Logic</div>
+<div class="text-[9px] font-bold text-primary/80 uppercase">Success // +50 XP</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+</div>
+<div class="p-3 bg-white/5 border-l-2 border-secondary flex items-center justify-between hover:bg-white/10 transition-colors group">
+<div class="flex items-center gap-4">
+<span class="text-[10px] text-secondary/60 font-mono">12:45</span>
+<div class="space-y-0.5">
+<div class="text-[11px] font-bold text-slate-200 uppercase group-hover:text-secondary transition-colors">Vector_DB_Sharding</div>
+<div class="text-[9px] font-bold text-secondary/80 uppercase">Completed // 12 Credits</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary text-sm">database</span>
+</div>
+<div class="p-3 bg-white/5 border-l-2 border-secondary flex items-center justify-between hover:bg-white/10 transition-colors group">
+<div class="flex items-center gap-4">
+<span class="text-[10px] text-secondary/60 font-mono">09:12</span>
+<div class="space-y-0.5">
+<div class="text-[11px] font-bold text-slate-200 uppercase">CNN_Stride_Calculation</div>
+<div class="text-[9px] font-bold text-secondary/80 uppercase">Failed // Retry_Avail</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary text-sm">warning</span>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+<footer class="h-8 border-t border-white/5 bg-background-dark/95 backdrop-blur-sm flex items-center justify-between px-6 text-[9px] font-mono tracking-wider shrink-0 z-50">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(0,255,204,0.6)]"></div>
+<span class="text-primary/80 uppercase">Node: Active-Sync-42</span>
+</div>
+<span class="text-slate-800">|</span>
+<span class="text-slate-500 uppercase">Ping: 12ms</span>
+</div>
+<div class="text-slate-600 font-bold">
+            SYSTEM_V4.2.0-STABLE
+        </div>
+</footer>
+
+</body></html>

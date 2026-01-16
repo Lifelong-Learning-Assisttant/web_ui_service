@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Unified Netrunner Deck Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#00f2ff",
+                        secondary: "#a3ff00",
+                        "cyber-bg": "#0a0c10",
+                        "panel-bg": "#0d1117",
+                        "sidebar-bg": "#080a0d",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        mono: ["JetBrains Mono", "monospace"],
+                    },
+                },
+            },
+        };
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-cyber-bg text-slate-100 font-display overflow-hidden h-screen;
+                background-image: linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+                background-size: 30px 30px;
+            }
+        }
+        .material-symbols-outlined {
+            font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24
+        }
+        .circuit-overlay {
+            background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuDUDAWiquhP3PAAkLCcnkcJEKeEkFWru8wen3ZJCpgdHPt9S9MePxJtWOUAYkNy_--QOmlhVDZmzILxotZHoFCn4Do8kbSLKNT9oMZYXHDydbx8Vl6ZzQ1o_ap8U_Hh30kuIinyarcQcbfvYyYZWJ_gVmn6ucoIhezxo1x_lTNL8xmRilnvqxIAmro33jm9xkNoSluioNNs9VaZHTnDML75lx5zHeuq94WBeUKnKeATb87-DCU-jNOt0XA1s3KVd6Ous34hZGhEztc);
+            background-blend-mode: overlay;
+        }
+        .glitch-text {
+            position: relative;
+            text-shadow: 1px 0 #a3ff00, -1px 0 #00f2ff;
+        }
+        .neon-border-cyan {
+            border: 1px solid rgba(0, 242, 255, 0.5);
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+        }
+        .neon-border-lime {
+            border: 1px solid rgba(163, 255, 0, 0.5);
+            box-shadow: 0 0 8px rgba(163, 255, 0, 0.2);
+        }
+        .cyber-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            display: block;
+        }
+        .cyber-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 242, 255, 0.05);
+            border-left: 1px solid rgba(0, 242, 255, 0.1);
+        }
+        .cyber-scrollbar::-webkit-scrollbar-thumb {
+            background: #00f2ff;
+            box-shadow: 0 0 10px #00f2ff;
+            border-radius: 2px;
+        }
+        .active-glow {
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
+            border: 1px solid #00f2ff;
+        }
+        .status-text-sharp {
+            text-shadow: none;
+            filter: none;
+            font-weight: 500;
+        }
+        .latex-block {
+            @apply font-mono text-[11px] py-1 text-primary;
+        }
+        .context-bar-glow {
+            box-shadow: 0 0 8px #00f2ff;
+        }
+        .deck-tab-active {
+            @apply bg-primary/10 text-primary border-t border-x border-primary/30 shadow-[0_-2px_10px_rgba(0,242,255,0.1)];
+        }
+        .deck-tab-inactive {
+            @apply bg-transparent text-slate-500 border-t border-x border-white/5 hover:text-slate-300 hover:bg-white/5;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col">
+<header class="h-12 border-b border-primary/20 flex items-center justify-between px-4 bg-sidebar-bg/80 backdrop-blur-md relative z-10 shrink-0">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 bg-secondary animate-pulse"></div>
+<h1 class="font-bold text-xs tracking-[0.3em] uppercase glitch-text">Cyber <span class="text-secondary">Code</span> Lab</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="px-2 py-1 rounded bg-white/5 border border-white/10 flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="text-[9px] font-mono text-slate-300">SERVER: ONLINE</span>
+</div>
+</div>
+</header>
+<div class="flex-1 flex overflow-hidden relative">
+<aside class="w-14 border-r border-white/10 bg-sidebar-bg flex flex-col items-center py-6 gap-6 shrink-0 relative z-20">
+<div class="relative group flex flex-col items-center justify-center w-10 h-10 rounded bg-primary/20 active-glow cursor-pointer">
+<span class="material-symbols-outlined text-primary text-2xl">chat_bubble</span>
+</div>
+<div class="group flex flex-col items-center justify-center w-10 h-10 cursor-pointer">
+<span class="material-symbols-outlined text-slate-600 text-2xl group-hover:text-slate-400 transition-colors">auto_stories</span>
+</div>
+<div class="group flex flex-col items-center justify-center w-10 h-10 cursor-pointer">
+<span class="material-symbols-outlined text-slate-600 text-2xl group-hover:text-slate-400 transition-colors">terminal</span>
+</div>
+<div class="group flex flex-col items-center justify-center w-10 h-10 cursor-pointer">
+<span class="material-symbols-outlined text-slate-600 text-2xl group-hover:text-slate-400 transition-colors">account_circle</span>
+</div>
+</aside>
+<main class="flex-1 flex flex-col min-w-0 circuit-overlay bg-black/50">
+<div class="flex-1 flex overflow-hidden min-h-0">
+<section class="w-1/2 flex flex-col min-w-0 bg-panel-bg relative border-r border-white/5" id="code-panel">
+<div class="h-10 px-3 bg-black/40 border-b border-primary/20 flex items-center justify-between shrink-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-secondary">code</span>
+<span class="text-[10px] font-mono font-bold text-slate-400">algorithm.py</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1.5 px-2 py-0.5 bg-primary/5 neon-border-cyan rounded text-primary hover:bg-primary/20 transition-all">
+<span class="material-symbols-outlined text-[14px]">play_arrow</span>
+<span class="text-[9px] font-bold tracking-wider">RUN</span>
+</button>
+<button class="text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">open_in_full</span>
+</button>
+</div>
+</div>
+<div class="p-3 grid grid-cols-2 gap-3 bg-black/20 shrink-0">
+<div class="relative">
+<label class="absolute -top-1.5 left-2 px-1 bg-panel-bg text-[8px] font-bold text-primary uppercase">Time Complexity</label>
+<input class="w-full bg-transparent border border-primary/30 rounded px-2 py-1.5 text-[10px] font-mono text-secondary focus:ring-1 focus:ring-primary outline-none" type="text" value="O(log n)"/>
+</div>
+<div class="relative">
+<label class="absolute -top-1.5 left-2 px-1 bg-panel-bg text-[8px] font-bold text-primary uppercase">Space Complexity</label>
+<input class="w-full bg-transparent border border-primary/30 rounded px-2 py-1.5 text-[10px] font-mono text-secondary focus:ring-1 focus:ring-primary outline-none" type="text" value="O(1)"/>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 font-mono text-xs leading-relaxed bg-[#0d1117]/90 cyber-scrollbar">
+<div class="flex"><span class="w-8 text-slate-700 text-right pr-4 shrink-0 select-none">1</span><span class="text-secondary">import</span> <span class="text-primary">math</span></div>
+<div class="flex"><span class="w-8 text-slate-700 text-right pr-4 shrink-0 select-none">2</span><span></span></div>
+<div class="flex"><span class="w-8 text-slate-700 text-right pr-4 shrink-0 select-none">3</span><span class="text-primary">def</span> <span class="text-secondary">binary_search</span>(arr, x):</div>
+<div class="flex"><span class="w-8 text-slate-700 text-right pr-4 shrink-0 select-none">4</span><span class="pl-4">low = 0</span></div>
+<div class="flex"><span class="w-8 text-slate-700 text-right pr-4 shrink-0 select-none">5</span><span class="pl-4">high = <span class="text-primary">len</span>(arr) - 1</span></div>
+<div class="flex"><span class="w-8 text-slate-700 text-right pr-4 shrink-0 select-none">6</span><span class="pl-4"><span class="text-secondary">while</span> low &lt;= high:</span></div>
+<div class="flex"><span class="w-8 text-slate-700 text-right pr-4 shrink-0 select-none">7</span><span class="pl-8">mid = (high + low) // 2</span></div>
+<div class="flex"><span class="w-8 text-slate-700 text-right pr-4 shrink-0 select-none">8</span><span class="pl-8"><span class="text-secondary">if</span> arr[mid] &lt; x:</span></div>
+<div class="flex"><span class="w-8 text-slate-700 text-right pr-4 shrink-0 select-none">9</span><span class="pl-12 text-primary">low = mid + 1</span></div>
+<div class="flex"><span class="w-8 text-slate-700 text-right pr-4 shrink-0 select-none">10</span><span class="pl-8"><span class="text-secondary">elif</span> arr[mid] &gt; x:</span></div>
+<div class="flex"><span class="w-8 text-slate-700 text-right pr-4 shrink-0 select-none">11</span><span class="pl-12 text-primary">high = mid - 1</span></div>
+<div class="flex"><span class="w-8 text-slate-700 text-right pr-4 shrink-0 select-none">12</span><span class="pl-8"><span class="text-secondary">else</span>:</span></div>
+<div class="flex"><span class="w-8 text-slate-700 text-right pr-4 shrink-0 select-none">13</span><span class="pl-12 text-primary"><span class="text-secondary">return</span> mid</span></div>
+<div class="flex"><span class="w-8 text-slate-700 text-right pr-4 shrink-0 select-none">14</span><span class="pl-4 text-primary"><span class="text-secondary">return</span> -1</span></div>
+<div class="flex"><span class="w-8 text-slate-700 text-right pr-4 shrink-0 select-none">15</span><span class="pl-4 inline-flex items-center">_<span class="w-1.5 h-3.5 bg-secondary ml-1 animate-pulse"></span></span></div>
+</div>
+</section>
+<section class="w-1/2 flex flex-col min-w-0 bg-panel-bg/95 backdrop-blur-sm relative" id="chat-panel">
+<div class="h-10 px-3 bg-black/40 border-b border-secondary/20 flex items-center justify-between shrink-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-secondary">psychology</span>
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">AI ASSISTANT</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1.5 px-2 py-0.5 bg-secondary/5 neon-border-lime rounded text-secondary hover:bg-secondary/20 transition-all">
+<span class="material-symbols-outlined text-[14px]">bolt</span>
+<span class="text-[9px] font-bold tracking-wider">HINT</span>
+</button>
+<button class="text-slate-500 hover:text-secondary transition-colors">
+<span class="material-symbols-outlined text-sm">open_in_full</span>
+</button>
+</div>
+</div>
+<div class="bg-black/20 border-b border-primary/10 px-3 py-2 shrink-0">
+<div class="flex justify-between items-center mb-1">
+<label class="text-[8px] font-bold text-primary uppercase tracking-widest">AGENT CONTEXT WINDOW</label>
+<span class="text-[8px] font-mono text-primary/70">20 / 100</span>
+</div>
+<div class="h-1.5 w-full bg-primary/10 rounded-full overflow-hidden relative">
+<div class="absolute inset-y-0 left-0 bg-primary context-bar-glow rounded-full w-[20%]"></div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-6 cyber-scrollbar relative pb-10">
+<div class="flex gap-3 group">
+<div class="w-8 h-8 rounded bg-secondary/10 border border-secondary/30 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-secondary text-lg">smart_toy</span>
+</div>
+<div class="flex-1 max-w-[90%] space-y-1">
+<div class="flex items-center gap-2">
+<span class="text-[8px] font-bold text-secondary uppercase tracking-[0.2em]">AI_CORE</span>
+</div>
+<div class="bg-[#0f172a] p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl border border-white/10 border-l-[2px] border-l-secondary text-[11px] leading-relaxed text-slate-300 shadow-xl">
+                                    The complexity of your <span class="text-secondary">binary_search</span> is correct. 
+                                    The expected Big O notation is:
+                                    <div class="latex-block bg-black/40 px-2 my-2 rounded border border-white/5 italic">
+                                        T(n) = O(\log_2 n)
+                                    </div>
+                                    Would you like to analyze the worst-case stack depth next?
+                                </div>
+</div>
+</div>
+<div class="flex gap-3 flex-row-reverse group">
+<div class="w-8 h-8 rounded bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-lg">person</span>
+</div>
+<div class="flex-1 max-w-[90%] space-y-1 text-right">
+<div class="flex items-center gap-2 justify-end">
+<span class="text-[8px] font-bold text-primary uppercase tracking-[0.2em]">USER_ROOT</span>
+</div>
+<div class="bg-[#0f172a] p-3 rounded-tl-xl rounded-bl-xl rounded-br-xl border border-white/10 border-r-[2px] border-r-primary text-[11px] leading-relaxed text-slate-300 shadow-xl inline-block text-left">
+                                    Yes, show me the memory allocation for large recursive calls.
+                                </div>
+</div>
+</div>
+<div class="flex gap-3 group">
+<div class="w-8 h-8 rounded bg-secondary/10 border border-secondary/30 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-secondary text-lg">smart_toy</span>
+</div>
+<div class="flex-1 max-w-[90%] space-y-1">
+<div class="flex items-center gap-2">
+<span class="text-[8px] font-bold text-secondary uppercase tracking-[0.2em]">AI_CORE</span>
+</div>
+<div class="bg-[#0f172a] p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl border border-white/10 border-l-[2px] border-l-secondary text-[11px] leading-relaxed text-slate-300 shadow-xl">
+                                    Analyzing stack frames...
+                                    <div class="latex-block bg-black/40 px-2 my-2 rounded border border-white/5 italic">
+                                        S(n) = \sum_{i=1}^{k} \text{frame}(i)
+                                    </div>
+                                    Maximum stack depth is roughly 20 for 1M elements.
+                                </div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<div class="h-1/3 shrink-0 bg-sidebar-bg border-t border-primary/30 shadow-[0_-5px_30px_rgba(0,0,0,0.8)] flex flex-col relative z-30">
+<div class="h-9 bg-black/60 border-b border-white/5 flex items-end px-4 gap-1 select-none">
+<div class="px-4 py-2 text-[10px] font-bold tracking-widest uppercase rounded-t-lg deck-tab-active relative top-[1px] cursor-pointer flex items-center gap-2 shadow-[0_0_15px_rgba(0,242,255,0.4)]">
+<span class="material-symbols-outlined text-sm">terminal</span>
+                        TERMINAL
+                        <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse ml-1"></span>
+</div>
+<div class="px-4 py-2 text-[10px] font-bold tracking-widest uppercase rounded-t-lg deck-tab-inactive cursor-pointer transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">sync_alt</span>
+                        AI_SYNC
+                    </div>
+</div>
+<div class="flex-1 bg-black/40 relative overflow-hidden flex flex-col font-mono text-xs">
+<div class="h-8 border-b border-white/5 bg-black/20 flex items-center justify-between px-4 shrink-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-slate-500">chevron_right</span>
+<span class="text-[10px] text-slate-400">CONSOLE_LOG</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_5px_#a3ff00]"></span>
+<span class="text-[9px] text-secondary">ACTIVE</span>
+</div>
+</div>
+<div class="flex-1 p-4 overflow-y-auto cyber-scrollbar">
+<div class="space-y-1.5">
+<div class="text-slate-400">&gt; system_check --target=algorithm.py</div>
+<div class="text-slate-500 italic pl-4">Compiling source code... OK</div>
+<div class="text-slate-500 italic pl-4">Loading test vectors... OK</div>
+<div class="h-2"></div>
+<div class="text-primary">&gt; Initializing the test run...</div>
+<div class="h-2"></div>
+<div class="flex items-start gap-3">
+<span class="text-secondary font-bold text-[11px] drop-shadow-[0_0_5px_rgba(163,255,0,0.5)]">[PASS]</span>
+<div class="flex-1">
+<span class="text-slate-200">test_binary_search_found</span>
+<span class="text-slate-600 ml-2">// Input: [1, 3, 5], Target: 3</span>
+</div>
+<span class="text-secondary text-[10px]">1ms</span>
+</div>
+<div class="flex items-start gap-3">
+<span class="text-secondary font-bold text-[11px] drop-shadow-[0_0_5px_rgba(163,255,0,0.5)]">[PASS]</span>
+<div class="flex-1">
+<span class="text-slate-200">test_binary_search_not_found</span>
+<span class="text-slate-600 ml-2">// Input: [2, 4, 6], Target: 5</span>
+</div>
+<span class="text-secondary text-[10px]">0ms</span>
+</div>
+<div class="flex items-start gap-3">
+<span class="text-secondary font-bold text-[11px] drop-shadow-[0_0_5px_rgba(163,255,0,0.5)]">[PASS]</span>
+<div class="flex-1">
+<span class="text-slate-200">test_large_dataset</span>
+<span class="text-slate-600 ml-2">// Input: Array(1M), Target: Random</span>
+</div>
+<span class="text-secondary text-[10px]">12ms</span>
+</div>
+<div class="h-2"></div>
+<div class="text-slate-400">&gt; Test Suite Completed: <span class="text-secondary">3/3 Passed</span></div>
+<div class="mt-4 flex items-center gap-2">
+<span class="text-primary">user@deck:~/dev$</span>
+<span class="w-1.5 h-4 bg-primary animate-pulse"></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<footer class="h-8 border-t border-primary/20 bg-sidebar-bg px-4 flex items-center justify-between shrink-0 relative z-40">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+<span class="text-[9px] font-mono text-primary uppercase tracking-[0.2em] status-text-sharp">DOCKER: PYTHON:3.12-SLIM</span>
+</div>
+<div class="h-3 w-px bg-white/10"></div>
+<div class="flex items-center gap-4 text-primary font-mono text-[9px] uppercase tracking-[0.2em] status-text-sharp">
+<span>STATUS: HEALTH</span>
+<span>TESTS TIME: 42MS</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-[9px] font-mono text-secondary/70">SECURE_TUNNEL_001</span>
+<span class="text-[9px] font-mono text-slate-600">v.1.1.0-REFINED</span>
+</div>
+</footer>
+</body></html>

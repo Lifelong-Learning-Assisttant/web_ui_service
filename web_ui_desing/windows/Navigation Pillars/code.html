@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Unified Navigation Design System</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00eaff",
+                        "background-light": "#f5f5f5",
+                        "background-dark": "#121212",
+                        "surface-dark": "#1A1A1A",
+                        "neutral-gray": "#888888",
+                        "accent-magenta": "#FF00FF",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .grid-bg {
+            background-image: radial-gradient(circle, #ffffff05 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 234, 255, 0.4), inset 0 0 8px rgba(0, 234, 255, 0.2);
+        }
+        .glow-text {
+            text-shadow: 0 0 10px rgba(0, 234, 255, 0.6);
+        }
+        .scanline {
+            width: 100%;
+            height: 1px;
+            background: rgba(0, 234, 255, 0.1);
+            position: absolute;
+            z-index: 10;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white selection:bg-primary selection:text-black min-h-screen">
+<!-- HUD Overlay Grid -->
+<div class="fixed inset-0 grid-bg pointer-events-none"></div>
+<div class="relative flex flex-col min-h-screen max-w-[430px] mx-auto border-x border-white/5 bg-background-light dark:bg-background-dark overflow-hidden">
+<!-- TopAppBar Component -->
+<header class="relative z-20 flex items-center bg-background-dark/80 backdrop-blur-md p-4 pb-2 justify-between border-b border-primary/20">
+<div class="text-primary flex size-10 shrink-0 items-center justify-center border border-primary/30 rounded" data-icon="terminal">
+<span class="material-symbols-outlined">terminal</span>
+</div>
+<div class="flex flex-col flex-1 px-3">
+<h2 class="text-white text-sm font-bold leading-tight tracking-widest uppercase">Unified_Nav_OS</h2>
+<div class="flex items-center gap-2">
+<span class="size-1.5 bg-primary rounded-full animate-pulse"></span>
+<p class="text-primary/60 text-[10px] font-medium uppercase tracking-tighter">System Status: Nominal</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<p class="text-primary text-[10px] font-bold leading-none tracking-widest">VER_1.0.4</p>
+<p class="text-accent-magenta text-[8px] font-bold">SECURED_LINK</p>
+</div>
+</header>
+<!-- HeadlineText Component -->
+<section class="relative z-10 px-4 pt-6 pb-2">
+<div class="flex items-center gap-2 mb-1">
+<div class="h-[1px] w-4 bg-primary"></div>
+<span class="text-primary text-[10px] font-bold tracking-[0.2em] uppercase">Architecture</span>
+</div>
+<h2 class="text-white tracking-tight text-3xl font-bold leading-none uppercase">Navigation Pillars</h2>
+</section>
+<!-- BodyText Component -->
+<section class="relative z-10 px-4 mb-4">
+<p class="text-neutral-gray text-sm font-normal leading-relaxed max-w-[90%]">
+                Core UI system specifications for the AI Tutor interface. Defining state transitions for high-frequency interactive HUD elements.
+            </p>
+</section>
+<!-- Main Comparison Grid -->
+<main class="flex-1 px-4 py-2 space-y-6 relative z-10">
+<!-- CHAT SYSTEM ROW -->
+<div class="space-y-3">
+<h3 class="text-white/40 text-[10px] font-bold tracking-[0.3em] uppercase flex items-center gap-2">
+<span class="text-primary">01</span> CHAT_SUBSYSTEM
+                </h3>
+<div class="grid grid-cols-2 gap-4">
+<!-- Inactive -->
+<div class="bg-surface-dark border border-white/5 p-4 rounded-lg flex flex-col items-center gap-3">
+<div class="size-12 flex items-center justify-center text-neutral-gray">
+<span class="material-symbols-outlined !text-3xl">chat_bubble</span>
+</div>
+<span class="text-[9px] text-neutral-gray font-bold tracking-widest uppercase">State: Inactive</span>
+</div>
+<!-- Active -->
+<div class="bg-primary/5 border border-primary/40 glow-cyan p-4 rounded-lg flex flex-col items-center gap-3">
+<div class="size-12 flex items-center justify-center text-primary glow-text border border-primary/60 rounded">
+<span class="material-symbols-outlined !text-3xl">chat_bubble</span>
+</div>
+<span class="text-[9px] text-primary font-bold tracking-widest uppercase">State: Active</span>
+</div>
+</div>
+</div>
+<!-- QUIZ SYSTEM ROW -->
+<div class="space-y-3">
+<h3 class="text-white/40 text-[10px] font-bold tracking-[0.3em] uppercase flex items-center gap-2">
+<span class="text-primary">02</span> KNOWLEDGE_QUIZ
+                </h3>
+<div class="grid grid-cols-2 gap-4">
+<!-- Inactive -->
+<div class="bg-surface-dark border border-white/5 p-4 rounded-lg flex flex-col items-center gap-3">
+<div class="size-12 flex items-center justify-center text-neutral-gray">
+<span class="material-symbols-outlined !text-3xl">menu_book</span>
+</div>
+<span class="text-[9px] text-neutral-gray font-bold tracking-widest uppercase">State: Inactive</span>
+</div>
+<!-- Active -->
+<div class="bg-primary/5 border border-primary/40 glow-cyan p-4 rounded-lg flex flex-col items-center gap-3">
+<div class="size-12 flex items-center justify-center text-primary glow-text border border-primary/60 rounded">
+<span class="material-symbols-outlined !text-3xl">menu_book</span>
+</div>
+<span class="text-[9px] text-primary font-bold tracking-widest uppercase">State: Active</span>
+</div>
+</div>
+</div>
+<!-- TERMINAL SYSTEM ROW -->
+<div class="space-y-3">
+<h3 class="text-white/40 text-[10px] font-bold tracking-[0.3em] uppercase flex items-center gap-2">
+<span class="text-primary">03</span> CMD_TERMINAL
+                </h3>
+<div class="grid grid-cols-2 gap-4">
+<!-- Inactive -->
+<div class="bg-surface-dark border border-white/5 p-4 rounded-lg flex flex-col items-center gap-3">
+<div class="size-12 flex items-center justify-center text-neutral-gray">
+<span class="material-symbols-outlined !text-3xl">terminal</span>
+</div>
+<span class="text-[9px] text-neutral-gray font-bold tracking-widest uppercase">State: Inactive</span>
+</div>
+<!-- Active -->
+<div class="bg-primary/5 border border-primary/40 glow-cyan p-4 rounded-lg flex flex-col items-center gap-3">
+<div class="size-12 flex items-center justify-center text-primary glow-text border border-primary/60 rounded">
+<span class="material-symbols-outlined !text-3xl">terminal</span>
+</div>
+<span class="text-[9px] text-primary font-bold tracking-widest uppercase">State: Active</span>
+</div>
+</div>
+</div>
+<!-- PROFILE SYSTEM ROW -->
+<div class="space-y-3 pb-8">
+<h3 class="text-white/40 text-[10px] font-bold tracking-[0.3em] uppercase flex items-center gap-2">
+<span class="text-primary">04</span> USER_PROFILE
+                </h3>
+<div class="grid grid-cols-2 gap-4">
+<!-- Inactive -->
+<div class="bg-surface-dark border border-white/5 p-4 rounded-lg flex flex-col items-center gap-3">
+<div class="size-12 flex items-center justify-center text-neutral-gray">
+<span class="material-symbols-outlined !text-3xl">account_circle</span>
+</div>
+<span class="text-[9px] text-neutral-gray font-bold tracking-widest uppercase">State: Inactive</span>
+</div>
+<!-- Active -->
+<div class="bg-primary/5 border border-primary/40 glow-cyan p-4 rounded-lg flex flex-col items-center gap-3">
+<div class="size-12 flex items-center justify-center text-primary glow-text border border-primary/60 rounded">
+<span class="material-symbols-outlined !text-3xl">account_circle</span>
+</div>
+<span class="text-[9px] text-primary font-bold tracking-widest uppercase">State: Active</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Specs Footer -->
+<section class="bg-surface-dark border-t border-white/10 p-4 space-y-4 pb-24 relative z-10">
+<h4 class="text-accent-magenta text-[10px] font-bold tracking-widest uppercase">Technical Specifications</h4>
+<div class="grid grid-cols-2 gap-2">
+<div class="text-[10px] font-mono text-neutral-gray bg-black/40 p-2 border-l-2 border-primary">
+<p>HEX: #00EAFF</p>
+<p>RGB: 0, 234, 255</p>
+</div>
+<div class="text-[10px] font-mono text-neutral-gray bg-black/40 p-2 border-l-2 border-accent-magenta">
+<p>RAD: 0.125rem</p>
+<p>GLW: 15px_40%</p>
+</div>
+</div>
+</section>
+<!-- Bottom Tab Bar Preview -->
+<footer class="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-background-dark/95 backdrop-blur-xl border-t border-primary/30 h-16 flex items-center justify-around px-6 z-50">
+<div class="flex flex-col items-center text-primary glow-text">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="text-[8px] mt-1 font-bold">CHAT</span>
+</div>
+<div class="flex flex-col items-center text-neutral-gray">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="text-[8px] mt-1 font-bold">QUIZ</span>
+</div>
+<div class="flex flex-col items-center text-neutral-gray">
+<span class="material-symbols-outlined">terminal</span>
+<span class="text-[8px] mt-1 font-bold">CMD</span>
+</div>
+<div class="flex flex-col items-center text-neutral-gray">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="text-[8px] mt-1 font-bold">USER</span>
+</div>
+<!-- Indicator Line -->
+<div class="absolute top-0 left-0 w-1/4 h-[2px] bg-primary glow-cyan"></div>
+</footer>
+</div>
+</body></html>
