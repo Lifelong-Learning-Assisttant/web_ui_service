@@ -43,6 +43,13 @@ services:
 networks:
   web_ui_network:
     name: web_ui_network
+    external: true
+  rag_network:
+    name: rag_rag_network
+    external: true
+  test_generator_network:
+    name: test_generator_default
+    external: true
 
 volumes:
   frontend-data:
