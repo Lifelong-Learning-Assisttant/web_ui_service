@@ -17,8 +17,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   settings: {
     agent: { provider: 'zai', model: 'glm-4.6v' },
     rag: { provider: 'openai', model: 'gpt-4o-mini' },
-    quiz: { provider: 'openai', model: 'gpt-4o-mini' }
+    quiz: { provider: 'openai', model: 'gpt-4o-mini' },
+    identityId: undefined
   },
+  selectedIdentity: null,
 
   // Actions
   login: async (username, password) => {
@@ -38,7 +40,15 @@ export const useAppStore = create<AppState>((set, get) => ({
       try {
         const settingsRes = await axios.get(`${API_BASE_URL}/settings?user_id=${user_id}`)
         if (settingsRes.data && Object.keys(settingsRes.data).length > 0) {
-          set({ settings: settingsRes.data })
+          const loadedSettings = settingsRes.data;
+          set({ settings: loadedSettings })
+          
+          // Если в настройках есть identityId, обновляем его и в объекте пользователя
+          if (loadedSettings.identityId) {
+            set((state) => ({
+              user: state.user ? { ...state.user, identityId: loadedSettings.identityId } : null
+            }))
+          }
         }
       } catch (e) {
         console.warn('Failed to load user settings, using defaults')
@@ -242,6 +252,41 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   setActiveTab: (tab: string) => set({ activeTab: tab }),
+
+  selectIdentity: (identity) => set({ selectedIdentity: identity }),
+
+  confirmIdentity: async () => {
+    const { selectedIdentity, user, updateSettings } = get()
+    if (!selectedIdentity || !user) return
+
+    set({ isLoading: true })
+    try {
+      // Сохраняем identityId в общих настройках пользователя через user_service
+      await updateSettings({ identityId: selectedIdentity.id });
+      
+      set((state) => ({
+        user: state.user ? { ...state.user, identityId: selectedIdentity.id } : null,
+        activeTab: 'chat',
+        isLoading: false
+      }))
+    } catch (error) {
+      console.error('Error confirming identity via settings:', error)
+      // Fallback: даже если сервер не ответил, пускаем в чат
+      set((state) => ({
+        user: state.user ? { ...state.user, identityId: selectedIdentity.id } : null,
+        activeTab: 'chat',
+        isLoading: false
+      }))
+    }
+  },
+
+  resetIdentity: () => {
+    set((state) => ({
+      user: state.user ? { ...state.user, identityId: undefined } : null,
+      selectedIdentity: null,
+      activeTab: 'profile' // Ensure we stay on profile to see the selection screen if integrated, but here it triggers the conditional in main.tsx
+    }))
+  },
   
   setLatexEnabled: (enabled: boolean) => set({ latexEnabled: enabled }),
   

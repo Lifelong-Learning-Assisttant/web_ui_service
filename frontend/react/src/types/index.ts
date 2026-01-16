@@ -35,11 +35,26 @@ export interface AppSettings {
   agent: LLMSettings;
   rag: LLMSettings;
   quiz: LLMSettings;
+  identityId?: string;
 }
 
 export interface User {
   id: string;
   username: string;
+  identityId?: string;
+}
+
+export interface Identity {
+  id: string;
+  name: string;
+  role: string;
+  avatarUrl: string;
+  specialization: string;
+  stats: {
+    sync: string;
+    latency: string;
+    id_code: string;
+  };
 }
 
 export interface AppState {
@@ -52,12 +67,16 @@ export interface AppState {
   latexEnabled: boolean;
   sessionId: string;
   settings: AppSettings;
+  selectedIdentity: Identity | null;
   
   // Actions
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   setSessionId: (sessionId: string) => Promise<void>;
   updateSettings: (settings: Partial<AppSettings>) => Promise<void>;
+  selectIdentity: (identity: Identity) => void;
+  confirmIdentity: () => Promise<void>;
+  resetIdentity: () => void;
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
   sendMessage: (content: string) => Promise<void>;
   executeAction: (action: string, data?: any) => Promise<any>;

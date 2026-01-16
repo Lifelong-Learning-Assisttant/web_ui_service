@@ -45,9 +45,10 @@ export const Settings: React.FC = () => {
     }
   }
 
-  const handleSettingChange = (service: keyof AppSettings, field: keyof LLMSettings, value: string) => {
+  const handleSettingChange = (service: 'agent' | 'rag' | 'quiz', field: keyof LLMSettings, value: string) => {
     setLocalSettings(prev => {
-      const updatedService = { ...prev[service], [field]: value };
+      const currentServiceSettings = prev[service] as LLMSettings;
+      const updatedService = { ...currentServiceSettings, [field]: value };
       
       // Если изменился провайдер, сбрасываем модель на первую доступную для этого провайдера
       if (field === 'provider') {
@@ -61,8 +62,9 @@ export const Settings: React.FC = () => {
     });
   }
 
-  const renderLLMSelect = (service: keyof AppSettings, label: string, icon: React.ReactNode) => {
-    const currentProvider = localSettings[service].provider as ProviderId;
+  const renderLLMSelect = (service: 'agent' | 'rag' | 'quiz', label: string, icon: React.ReactNode) => {
+    const serviceSettings = localSettings[service] as LLMSettings;
+    const currentProvider = serviceSettings.provider as ProviderId;
     
     return (
       <Box sx={{ mb: 3 }}>
@@ -77,7 +79,7 @@ export const Settings: React.FC = () => {
             <FormControl fullWidth size="small">
               <InputLabel>Провайдер</InputLabel>
               <Select
-                value={localSettings[service].provider}
+                value={serviceSettings.provider}
                 label="Провайдер"
                 onChange={(e) => handleSettingChange(service, 'provider', e.target.value)}
               >
@@ -91,7 +93,7 @@ export const Settings: React.FC = () => {
             <FormControl fullWidth size="small">
               <InputLabel>Модель</InputLabel>
               <Select
-                value={localSettings[service].model}
+                value={serviceSettings.model}
                 label="Модель"
                 onChange={(e) => handleSettingChange(service, 'model', e.target.value)}
               >
