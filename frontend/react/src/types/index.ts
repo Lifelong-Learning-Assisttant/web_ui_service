@@ -72,6 +72,7 @@ export interface AppState {
   // Actions
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  loadSettings: () => Promise<void>;
   setSessionId: (sessionId: string) => Promise<void>;
   updateSettings: (settings: Partial<AppSettings>) => Promise<void>;
   selectIdentity: (identity: Identity) => void;

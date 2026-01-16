@@ -37,22 +37,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ token: access_token, user: { id: user_id, username: loginUsername }, isLoading: false })
       
       // Load user settings after login
-      try {
-        const settingsRes = await axios.get(`${API_BASE_URL}/settings?user_id=${user_id}`)
-        if (settingsRes.data && Object.keys(settingsRes.data).length > 0) {
-          const loadedSettings = settingsRes.data;
-          set({ settings: loadedSettings })
-          
-          // Если в настройках есть identityId, обновляем его и в объекте пользователя
-          if (loadedSettings.identityId) {
-            set((state) => ({
-              user: state.user ? { ...state.user, identityId: loadedSettings.identityId } : null
-            }))
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to load user settings, using defaults')
-      }
+      const { loadSettings } = get()
+      await loadSettings()
     } catch (error) {
       console.error('Login error:', error)
       set({ isLoading: false })
@@ -63,6 +49,28 @@ export const useAppStore = create<AppState>((set, get) => ({
   logout: () => {
     localStorage.removeItem('token')
     set({ token: null, user: null, messages: [] })
+  },
+
+  loadSettings: async () => {
+    const { user } = get()
+    if (!user) return
+
+    try {
+      const settingsRes = await axios.get(`${API_BASE_URL}/settings?user_id=${user.id}`)
+      if (settingsRes.data && Object.keys(settingsRes.data).length > 0) {
+        const loadedSettings = settingsRes.data;
+        set({ settings: loadedSettings })
+        
+        // Если в настройках есть identityId, обновляем его и в объекте пользователя
+        if (loadedSettings.identityId) {
+          set((state) => ({
+            user: state.user ? { ...state.user, identityId: loadedSettings.identityId } : null
+          }))
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load user settings')
+    }
   },
 
   setSessionId: async (sessionId: string) => {

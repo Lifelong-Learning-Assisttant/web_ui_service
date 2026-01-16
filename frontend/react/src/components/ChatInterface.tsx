@@ -156,7 +156,7 @@ export const ChatInterface: React.FC = () => {
                     <span className="text-primary/60 italic text-xs uppercase tracking-widest">Processing_Neural_Command...</span>
                   </div>
                 ) : (
-                  <div className="space-y-2 whitespace-pre-wrap">
+                  <div className="space-y-2 break-words overflow-hidden">
                     {formatContent(msg.content)}
                   </div>
                 )}

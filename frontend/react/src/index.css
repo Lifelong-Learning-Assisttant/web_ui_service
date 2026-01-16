@@ -100,29 +100,27 @@
   .glass-panel .katex-display {
     @apply bg-black/40 p-4 rounded border border-accent-cyan/20 my-4;
   }
-  .cyber-border {
-    position: relative;
-    background: rgba(14, 17, 22, 0.9);
-    border: 1px solid rgba(0, 255, 204, 0.2);
-    clip-path: polygon(
-      0 15px, 15px 0, 
-      calc(100% - 15px) 0, 100% 15px, 
-      100% calc(100% - 15px), calc(100% - 15px) 100%, 
-      15px 100%, 0 calc(100% - 15px)
-    );
+
+  /* Custom Cyber Scrollbar */
+  .cyber-scroll::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
   }
 
-  .cyber-input {
-    @apply bg-black/40 border border-primary/20 text-primary p-3 focus:border-primary/60 outline-none transition-all placeholder:text-primary/30;
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+  .cyber-scroll::-webkit-scrollbar-track {
+    background: rgba(10, 14, 20, 0.5);
+    border-left: 1px solid rgba(0, 255, 204, 0.05);
   }
 
-  .neon-text-cyan { text-shadow: 0 0 10px rgba(0, 255, 204, 0.5); }
-  .neon-text-lime { text-shadow: 0 0 10px rgba(218, 255, 0, 0.5); }
-  .neon-glow-cyan { box-shadow: 0 0 15px rgba(0, 255, 204, 0.2); }
+  .cyber-scroll::-webkit-scrollbar-thumb {
+    background: #00FFCC;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.8);
+  }
 
-  .mask-gradient-v {
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
-    mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+  /* Firefox Support */
+  .cyber-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #00FFCC rgba(10, 14, 20, 0.5);
   }
 }
