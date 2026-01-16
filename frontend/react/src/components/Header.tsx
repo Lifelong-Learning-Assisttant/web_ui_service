@@ -1,6 +1,6 @@
 import React from 'react'
-import { AppBar, Toolbar, Typography, Box, IconButton, Chip } from '@mui/material'
-import { Chat, Science, Settings } from '@mui/icons-material'
+import { AppBar, Toolbar, Typography, Box, IconButton, Chip, Tooltip } from '@mui/material'
+import { Chat, Science, Settings, Logout } from '@mui/icons-material'
 import { useAppStore } from '../store/appStore'
 
 interface HeaderProps {
@@ -8,7 +8,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onTabChange }) => {
-  const { activeTab, latexEnabled, setLatexEnabled } = useAppStore()
+  const { activeTab, latexEnabled, setLatexEnabled, logout, user } = useAppStore()
 
   const tabs = [
     { id: 'chat', label: 'Чат', icon: <Chat /> },
@@ -61,6 +61,17 @@ export const Header: React.FC<HeaderProps> = ({ onTabChange }) => {
               border: '1px solid rgba(255,255,255,0.3)'
             }}
           />
+          
+          {user && (
+            <Tooltip title="Выйти">
+              <IconButton
+                onClick={logout}
+                sx={{ ml: 1, color: 'rgba(255,255,255,0.7)', '&:hover': { color: '#fff' } }}
+              >
+                <Logout />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       </Toolbar>
     </AppBar>
