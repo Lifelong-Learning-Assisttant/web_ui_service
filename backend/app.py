@@ -10,6 +10,7 @@ import signal
 import sys
 from datetime import datetime, timezone
 from typing import Dict, Optional, Any, List
+import secrets
 from contextlib import asynccontextmanager
 
 import httpx
@@ -133,6 +134,11 @@ class AgentRunRequest(BaseModel):
 
 class SessionRequest(BaseModel):
     session_id: str
+
+class CreateSessionRequest(BaseModel):
+    user_id: str
+    username: str
+    title: Optional[str] = None
 
 class ProgressEvent(BaseModel):
     event_id: str
@@ -348,6 +354,62 @@ async def end_session(request: Request, body: SessionRequest):
     except Exception as e:
         logger.error("end_session_error", session_id=body.session_id, error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/sessions/create")
+async def create_user_session(request: Request, body: CreateSessionRequest):
+    """Создание новой уникальной сессии для пользователя"""
+    try:
+        # Генерируем уникальный ID: login + случайный хэш
+        random_hash = secrets.token_hex(4)
+        session_id = f"{body.username}_{random_hash}"
+        
+        async with httpx.AsyncClient() as client:
+            # Регистрируем сессию в User Service
+            response = await client.post(
+                f"{settings.user_service_url}/sessions/",
+                json={
+                    "user_id": body.user_id,
+                    "session_id": session_id,
+                    "title": body.title or f"Chat {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                },
+                timeout=5.0
+            )
+            
+            if response.status_code == 200:
+                logger.info("session_created_in_db", user_id=body.user_id, session_id=session_id)
+                return response.json()
+            else:
+                logger.error("session_db_creation_failed", status=response.status_code)
+                raise HTTPException(status_code=response.status_code, detail="Failed to register session in DB")
+                
+    except Exception as e:
+        logger.error("create_session_error", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/sessions/{user_id}")
+async def get_user_sessions(user_id: str, role: str = "user"):
+    """Получение списка сессий пользователя с учетом роли"""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{settings.user_service_url}/sessions/user/{user_id}",
+                timeout=5.0
+            )
+            
+            if response.status_code == 200:
+                sessions_list = response.json()
+                
+                # Если роль developer, добавляем возможность видеть тестовые сессии
+                # (в реальности тесты могут быть в отдельном списке или подгружаться иначе)
+                # Здесь мы просто возвращаем то, что привязано к пользователю в БД
+                
+                logger.info("sessions_fetched", user_id=user_id, count=len(sessions_list))
+                return {"sessions": sessions_list}
+            else:
+                return {"sessions": []}
+    except Exception as e:
+        logger.error("fetch_sessions_error", user_id=user_id, error=str(e))
+        return {"sessions": []}
 
 @app.post("/api/auth/login")
 async def login(request: Request):
