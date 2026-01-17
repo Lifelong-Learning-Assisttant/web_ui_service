@@ -85,11 +85,13 @@ class WebSocketService {
         store.setSessionId(data.session_id);
       }, 500);
     } else {
-      // Добавляем промежуточное системное сообщение о прогрессе
+      // Добавляем сообщение о прогрессе или вопрос квиза
       store.addMessage({
         role: 'assistant',
         content: data.message || `Выполнение: ${data.step}`,
-        isSystem: true
+        isSystem: data.step !== 'quizz_question',
+        type: data.step,
+        meta: data.meta
       });
     }
   }

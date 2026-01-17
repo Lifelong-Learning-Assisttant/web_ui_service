@@ -7,6 +7,8 @@ export interface ChatMessage {
   timestamp: Date;
   isProcessing?: boolean;
   isSystem?: boolean;  // Для системных сообщений (прогресс)
+  type?: string;       // Тип сообщения (например, quizz_question)
+  meta?: any;          // Метаданные (прогресс квиза и т.д.)
 }
 
 export interface ButtonConfig {

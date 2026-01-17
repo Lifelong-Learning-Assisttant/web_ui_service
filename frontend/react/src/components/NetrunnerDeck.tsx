@@ -18,7 +18,15 @@ export const NetrunnerDeck: React.FC<NetrunnerDeckProps> = ({ mode }) => {
   const [height, setHeight] = useState(33); // в процентах vh
   const [isMinimized, setIsMinimized] = useState(false);
   
-  const { sendMessage, isLoading } = useAppStore();
+  const { sendMessage, isLoading, messages } = useAppStore();
+
+  // Автоматическое переключение на ANSWER_QUIZ при появлении вопроса
+  useEffect(() => {
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg?.type === 'quizz_question' && mode === 'theory') {
+      setActiveTab('ANSWER_QUIZ');
+    }
+  }, [messages, mode]);
   const isResizing = useRef(false);
 
   const startResizing = (e: React.MouseEvent) => {
@@ -44,9 +52,18 @@ export const NetrunnerDeck: React.FC<NetrunnerDeckProps> = ({ mode }) => {
 
   const handleSend = async () => {
     if (inputText.trim() && !isLoading) {
-      await sendMessage(inputText.trim());
+      let textToSend = inputText.trim();
+      
+      // Если мы в режиме ANSWER_QUIZ, можем добавить префикс или обработать иначе,
+      // но по текущей логике backend-а он сам понимает контекст.
+      // Однако, можно добавить визуальную индикацию или логику.
+      
+      await sendMessage(textToSend);
       setInputText('');
       setInputMode('EDITOR');
+      
+      // Если мы ответили на квиз, можно переключить обратно на AI_SYNC для уточнения,
+      // но обычно пользователь ждет следующего вопроса или оценки.
     }
   };
 

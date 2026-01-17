@@ -108,7 +108,9 @@ export const useAppStore = create<AppState>((set, get) => ({
                 id: `history_${index}_${Date.now()}`,
                 role: role as 'user' | 'assistant',
                 content: msg.content,
-                timestamp: new Date(Date.now() - (response.data.messages.length - index) * 1000)
+                timestamp: new Date(Date.now() - (response.data.messages.length - index) * 1000),
+                type: msg.type,
+                meta: msg.meta
               })
             }
           }
@@ -148,11 +150,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
+    const { activeTab, setActiveTab } = get()
     const newMessage: ChatMessage = {
       ...message,
       id: Date.now().toString(),
       timestamp: new Date(),
     }
+    
+    // Если пришел вопрос квиза, переключаем на вкладку теории (квиза)
+    if (newMessage.type === 'quizz_question' && activeTab !== 'theory') {
+      setActiveTab('theory')
+    }
+    
     set((state) => ({ messages: [...state.messages, newMessage] }))
   },
 

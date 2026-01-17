@@ -13,9 +13,15 @@ interface UnifiedChatProps {
   limit?: number;
   className?: string;
   showSystem?: boolean;
+  mode?: 'all' | 'quiz_only' | 'chat_only';
 }
 
-export const UnifiedChat: React.FC<UnifiedChatProps> = ({ limit, className = "", showSystem = true }) => {
+export const UnifiedChat: React.FC<UnifiedChatProps> = ({
+  limit,
+  className = "",
+  showSystem = true,
+  mode = 'all'
+}) => {
   const { messages, user } = useAppStore();
 
   const formatContent = (content: string) => {
@@ -106,7 +112,27 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({ limit, className = "",
   };
 
   const filteredMessages = messages
-    .filter(m => showSystem || !m.isSystem)
+    .filter(m => {
+      // Логика фильтрации на основе режима
+      if (mode === 'quiz_only') {
+        return m.type === 'quizz_question';
+      }
+      
+      if (mode === 'chat_only') {
+        // В режиме чата в QuizHub показываем сообщения пользователя и обычные ответы ассистента,
+        // но скрываем вопросы квиза и системные логи (если выключены)
+        const isUser = m.role === 'user';
+        const isAssistantResponse = m.role === 'assistant' && !m.isSystem && m.type !== 'quizz_question';
+        const isSystemAllowed = m.isSystem && showSystem;
+        
+        return isUser || isAssistantResponse || isSystemAllowed;
+      }
+      
+      // По умолчанию (all) - показываем все кроме системных (если выключены)
+      if (!showSystem && m.isSystem) return false;
+      
+      return true;
+    })
     .slice(limit ? -limit : 0);
 
   return (
@@ -125,6 +151,11 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({ limit, className = "",
                   <span className="text-[9px] font-display text-slate-400 font-bold uppercase tracking-wider">SYSTEM MESSAGE</span>
                   <span className="text-[8px] text-slate-600">{msg.timestamp.toLocaleTimeString()}</span>
                 </>
+              ) : msg.type === 'quizz_question' ? (
+                <>
+                  <span className="text-[9px] font-display text-accent-lime font-bold uppercase tracking-wider neon-text-lime">QUIZZ QUESTION</span>
+                  <span className="text-[8px] text-slate-500">{msg.timestamp.toLocaleTimeString()}</span>
+                </>
               ) : msg.role === 'assistant' ? (
                 <>
                   <span className="text-[9px] font-display text-accent-lime font-bold uppercase tracking-wider">AI ASSISTANT</span>
@@ -141,9 +172,11 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({ limit, className = "",
             <div className={`glass-panel p-4 rounded-xl text-sm text-slate-200 relative overflow-hidden ${
               msg.isSystem
                 ? 'border-l-2 border-slate-500 bg-slate-500/5 shadow-[0_0_15px_rgba(148,163,184,0.1)]'
-                : msg.role === 'assistant'
-                  ? 'border-l-2 border-accent-lime bg-accent-lime/5 ai-bubble-glow'
-                  : 'border-r-2 border-primary bg-primary/5 text-right user-bubble-glow'
+                : msg.type === 'quizz_question'
+                  ? 'border-l-2 border-accent-lime bg-accent-lime/10 ai-bubble-glow shadow-[0_0_20px_rgba(162,255,0,0.15)]'
+                  : msg.role === 'assistant'
+                    ? 'border-l-2 border-accent-lime bg-accent-lime/5 ai-bubble-glow'
+                    : 'border-r-2 border-primary bg-primary/5 text-right user-bubble-glow'
             }`}>
               {msg.isProcessing ? (
                 <div className="flex items-center gap-3">

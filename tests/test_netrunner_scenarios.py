@@ -126,7 +126,8 @@ def check_event_sequence(events, expected_steps):
     return True
 
 async def test_scenarios():
-    session_id = f"netrunner_test_{int(datetime.now().timestamp())}"
+    # Используем префикс test_, чтобы сессия была доступна разработчикам (не-админам)
+    session_id = f"test_{int(datetime.now().timestamp())}"
     ws_url = f"{WS_BASE_URL}/ws/{session_id}?token={WS_TOKEN}"
     
     print(f"🚀 Запуск тестов NetRunner (Session: {session_id})")
@@ -139,7 +140,7 @@ async def test_scenarios():
         # 1. General
         print("\n--- [SCENARIO 1: General Chat] ---")
         ans, events = await run_agent_message(session_id, "Привет! Ты кто?", ws)
-        assert check_event_sequence(events, ["intent_determined", "start_direct_answer"]), "Сбой в General Flow"
+        assert check_event_sequence(events, ["intent_determined", "start_direct_answer", "direct_answer_done"]), "Сбой в General Flow"
 
         # 2. RAG
         print("\n--- [SCENARIO 2: RAG Search] ---")
@@ -161,16 +162,16 @@ async def test_scenarios():
             "start_retrieval",
             "start_prepare_material",
             "start_generate_exam",
-            "generate_done"
+            "quizz_question"
         ]), "Сбой старта квиза (v3.1)"
 
         print("\n[3.2] Ответ на вопрос 1 (выбор первого варианта)...")
         ans, events = await run_agent_message(session_id, "1", ws)
-        assert check_event_sequence(events, ["next_question"]), "Сбой обработки ответа"
+        assert check_event_sequence(events, ["quizz_question"]), "Сбой обработки ответа"
 
         print("\n[3.3] Пропуск вопроса 2 (/skip_question)...")
         ans, events = await run_agent_message(session_id, "/skip_question", ws)
-        assert check_event_sequence(events, ["next_question"]), "Сбой пропуска вопроса"
+        assert check_event_sequence(events, ["quizz_question"]), "Сбой пропуска вопроса"
 
         print("\n[3.4] Уточнение контекста...")
         ans, events = await run_agent_message(session_id, "А что значит этот термин в вопросе?", ws)
