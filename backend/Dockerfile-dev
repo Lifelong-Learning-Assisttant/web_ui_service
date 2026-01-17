@@ -6,6 +6,7 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     build-essential \
+    docker.io \
     && rm -rf /var/lib/apt/lists/*
 
 # Оптимизация uv / окружения

@@ -1,0 +1,25 @@
+FROM python:3.11-slim-bookworm
+
+# Установка системных зависимостей
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Установка uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Предустановка базовых пакетов для тестирования (делаем под root)
+RUN uv pip install --system pytest pytest-json-report
+
+# Создание непривилегированного пользователя
+RUN useradd -m -u 1000 sandbox
+USER sandbox
+WORKDIR /home/sandbox/app
+
+# Настройка путей
+ENV PYTHONUNBUFFERED=1
+
+# Контейнер будет висеть в ожидании команд через docker exec
+CMD ["tail", "-f", "/dev/null"]

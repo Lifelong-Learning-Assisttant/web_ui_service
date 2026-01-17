@@ -23,6 +23,8 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
+from code_executor import code_executor
+
 # ===== Settings =====
 class Settings:
     """Настройки из JSON файла"""
@@ -156,9 +158,14 @@ class SubscribeMessage(BaseModel):
     session_id: str
     token: Optional[str] = None
 
+class TerminalCommandRequest(BaseModel):
+    command: str
+    session_id: str
+    cwd: Optional[str] = "/home/sandbox/app"
+
 # ===== WebSocket Endpoint =====
 @app.websocket("/ws/{session_id}")
-async def websocket_endpoint(websocket: WebSocket, session_id: str, token: str = ""):
+async def websocket_endpoint(websocket: WebSocket, session_id: str, token: str = "", user_id: Optional[str] = None):
     """WebSocket endpoint for real-time events"""
     
     # Security check
@@ -189,8 +196,37 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str, token: str =
                 msg = json.loads(data)
                 if msg.get("cmd") == "ping":
                     await websocket.send_json({"type": "pong"})
-            except:
-                pass
+                elif msg.get("cmd") == "terminal":
+                    command = msg.get("command")
+                    cwd = msg.get("cwd", "/home/sandbox/app")
+                    problem_path = msg.get("problem_path") # Опционально для начисления XP
+                    
+                    logger.info("terminal_command_received", session_id=session_id, command=command)
+                    
+                    async for output_line in code_executor.execute_command(command, cwd=cwd):
+                        await websocket.send_json({
+                            "type": "terminal_output",
+                            "session_id": session_id,
+                            "line": output_line
+                        })
+                    
+                    # Если команда была запуском тестов, обрабатываем XP
+                    if "pytest" in command and user_id:
+                        test_results = await code_executor.run_tests(problem_path or cwd)
+                        await code_executor.process_xp_award(user_id, test_results, settings.user_service_url)
+                        
+                        await websocket.send_json({
+                            "type": "xp_update",
+                            "session_id": session_id,
+                            "results": test_results.get("summary", {})
+                        })
+
+                    await websocket.send_json({
+                        "type": "terminal_done",
+                        "session_id": session_id
+                    })
+            except Exception as e:
+                logger.error("ws_message_error", error=str(e))
                 
     except WebSocketDisconnect:
         logger.info("websocket_disconnected", session_id=session_id)

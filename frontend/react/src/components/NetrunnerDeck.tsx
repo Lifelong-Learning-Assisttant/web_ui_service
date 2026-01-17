@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../store/appStore';
-import { Terminal, MessageSquare, BookOpen, Send, Edit3, Eye, ChevronUp, ChevronDown, MinusSquare, PlusSquare } from 'lucide-react';
+import { Terminal as TerminalIcon, MessageSquare, BookOpen, Send, Edit3, Eye, MinusSquare, PlusSquare } from 'lucide-react';
+import { Terminal } from 'xterm';
+import { FitAddon } from 'xterm-addon-fit';
+import 'xterm/css/xterm.css';
 import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
 
@@ -19,14 +22,127 @@ export const NetrunnerDeck: React.FC<NetrunnerDeckProps> = ({ mode }) => {
   const [isMinimized, setIsMinimized] = useState(false);
   
   const { sendMessage, isLoading, messages } = useAppStore();
+  const terminalRef = useRef<HTMLDivElement>(null);
+  const xtermRef = useRef<Terminal | null>(null);
+  const fitAddonRef = useRef<FitAddon | null>(null);
 
-  // Автоматическое переключение на ANSWER_QUIZ при появлении вопроса
+  // Обработка команд терминала извне (например, кнопка Run Tests)
   useEffect(() => {
-    const lastMsg = messages[messages.length - 1];
-    if (lastMsg?.type === 'quizz_question' && mode === 'theory') {
-      setActiveTab('ANSWER_QUIZ');
+    const handleTerminalCommand = (e: any) => {
+      if (activeTab !== 'TERMINAL') setActiveTab('TERMINAL');
+      
+      const { command, problem_path } = e.detail;
+      if (xtermRef.current) {
+        xtermRef.current.writeln(`\r\n\x1b[1;33m> Executing: ${command}\x1b[0m`);
+        
+        // Отправка через WebSocket
+        const ws = (window as any).chatWS;
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            cmd: 'terminal',
+            command,
+            problem_path,
+            cwd: `/home/sandbox/app/${problem_path}`
+          }));
+        }
+      }
+    };
+
+    window.addEventListener('terminal-command', handleTerminalCommand);
+    return () => window.removeEventListener('terminal-command', handleTerminalCommand);
+  }, [activeTab]);
+
+  // Инициализация XTerm
+  useEffect(() => {
+    if (activeTab === 'TERMINAL' && terminalRef.current && !xtermRef.current) {
+      const term = new Terminal({
+        theme: {
+          background: '#05070a',
+          foreground: '#00ffcc',
+          cursor: '#00ffcc',
+          selectionBackground: 'rgba(0, 255, 204, 0.3)',
+        },
+        fontFamily: 'JetBrains Mono, monospace',
+        fontSize: 12,
+        cursorBlink: true,
+        convertEol: true
+      });
+
+      const fitAddon = new FitAddon();
+      term.loadAddon(fitAddon);
+      term.open(terminalRef.current);
+      setTimeout(() => fitAddon.fit(), 100);
+
+      term.writeln('\x1b[1;36m> Neural Uplink Established...\x1b[0m');
+      term.write('\r\n\x1b[1;34m[sandbox@netrunner]$\x1b[0m ');
+
+      // Обработка ввода
+      let currentLine = '';
+      term.onData(e => {
+        switch (e) {
+          case '\r': // Enter
+            term.write('\r\n');
+            if (currentLine.trim()) {
+              const ws = (window as any).chatWS;
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                  cmd: 'terminal',
+                  command: currentLine,
+                  cwd: `/home/sandbox/app/valid_parentheses`
+                }));
+              }
+            } else {
+              term.write('\x1b[1;34m[sandbox@netrunner]$\x1b[0m ');
+            }
+            currentLine = '';
+            break;
+          case '\u007F': // Backspace
+            if (currentLine.length > 0) {
+              currentLine = currentLine.slice(0, -1);
+              term.write('\b \b');
+            }
+            break;
+          default:
+            if (e >= ' ' && e <= '~') {
+              currentLine += e;
+              term.write(e);
+            }
+        }
+      });
+
+      xtermRef.current = term;
+      fitAddonRef.current = fitAddon;
+
+      // Глобальный обработчик для вывода из WebSocket
+      const handleWsOutput = (e: any) => {
+        const data = e.detail;
+        if (data.type === 'terminal_output' && xtermRef.current) {
+          xtermRef.current.write(data.line);
+        } else if (data.type === 'terminal_done' && xtermRef.current) {
+          xtermRef.current.write('\r\n\x1b[1;34m[sandbox@netrunner]$\x1b[0m ');
+        }
+      };
+      window.addEventListener('ws-terminal-output', handleWsOutput);
+      (window as any)._terminalWsHandler = handleWsOutput;
     }
-  }, [messages, mode]);
+
+    return () => {
+      if (xtermRef.current) {
+        if ((window as any)._terminalWsHandler) {
+          window.removeEventListener('ws-terminal-output', (window as any)._terminalWsHandler);
+        }
+        xtermRef.current.dispose();
+        xtermRef.current = null;
+      }
+    };
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!isMinimized && fitAddonRef.current) {
+      setTimeout(() => fitAddonRef.current?.fit(), 300);
+    }
+  }, [height, isMinimized]);
+
   const isResizing = useRef(false);
 
   const startResizing = (e: React.MouseEvent) => {
@@ -53,14 +169,9 @@ export const NetrunnerDeck: React.FC<NetrunnerDeckProps> = ({ mode }) => {
   const handleSend = async () => {
     if (inputText.trim() && !isLoading) {
       let textToSend = inputText.trim();
-      
-      // Передаем текущую вкладку как режим взаимодействия
       await sendMessage(textToSend, activeTab);
       setInputText('');
       setInputMode('EDITOR');
-      
-      // Если мы ответили на квиз, можно переключить обратно на AI_SYNC для уточнения,
-      // но обычно пользователь ждет следующего вопроса или оценки.
     }
   };
 
@@ -69,17 +180,15 @@ export const NetrunnerDeck: React.FC<NetrunnerDeckProps> = ({ mode }) => {
       style={{ height: isMinimized ? '40px' : `${height}vh` }}
       className={`border-t border-primary/20 bg-surface-dark/80 backdrop-blur-md flex flex-col overflow-hidden relative transition-all duration-300 ease-in-out ${isMinimized ? 'translate-y-[calc(100%-40px)]' : ''}`}
     >
-      {/* Resize Handle */}
       <div
         onMouseDown={startResizing}
         className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize hover:bg-primary/40 z-50 transition-colors"
       />
 
-      {/* Tab Switcher */}
       <div className="flex border-b border-slate-800 bg-black/40 shrink-0 items-center justify-between pr-2">
         <div className="flex">
         {[
-          { id: 'TERMINAL', icon: <Terminal className="w-3 h-3" />, label: 'TERMINAL', modes: ['algos'] },
+          { id: 'TERMINAL', icon: <TerminalIcon className="w-3 h-3" />, label: 'TERMINAL', modes: ['algos'] },
           { id: 'AI_SYNC', icon: <MessageSquare className="w-3 h-3" />, label: 'AI_SYNC', modes: ['chat', 'theory', 'algos'] },
           { id: 'ANSWER_QUIZ', icon: <BookOpen className="w-3 h-3" />, label: 'ANSWER_QUIZ', modes: ['theory'] },
         ].filter(tab => tab.modes.includes(mode)).map((tab) => (
@@ -111,15 +220,11 @@ export const NetrunnerDeck: React.FC<NetrunnerDeckProps> = ({ mode }) => {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {activeTab === 'TERMINAL' ? (
-          <div className="flex-1 p-4 font-mono text-[11px] overflow-y-auto cyber-scroll bg-black/20">
-            <div className="text-white/40 mb-2 uppercase tracking-tighter">System Initialization...</div>
-            <div className="text-accent-lime">[PASS] Docker Container: python:3.12-slim active</div>
-            <div className="text-primary">[INFO] Neural Link Established</div>
-            <div className="text-slate-500 mt-4 italic">// No active logs in this session</div>
+          <div className="flex-1 p-2 bg-black/20 overflow-hidden">
+            <div ref={terminalRef} className="w-full h-full" />
           </div>
         ) : (
           <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Context Window Indicator */}
             <div className="px-4 py-1.5 bg-black/40 border-b border-slate-800 flex justify-between items-center shrink-0">
               <span className="text-[8px] font-display text-primary tracking-[0.2em] uppercase font-bold">Agent Context Window</span>
               <div className="flex items-center gap-3">
@@ -130,7 +235,6 @@ export const NetrunnerDeck: React.FC<NetrunnerDeckProps> = ({ mode }) => {
               </div>
             </div>
 
-            {/* Input Engine */}
             <div className="flex-1 flex flex-col overflow-hidden p-3">
               <div className="glass-panel rounded-lg flex-1 flex flex-col overflow-hidden border border-slate-700/50">
                 <div className="flex border-b border-slate-800 bg-black/20 shrink-0">
