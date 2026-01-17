@@ -105,7 +105,7 @@ export const Settings: React.FC = () => {
         </div>
       </section>
 
-      <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto space-y-6 pr-2 cyber-scroll">
         {/* Model Section */}
         <div className="grid grid-cols-1 gap-6">
           {renderLLMSelect('agent', 'AI_ORCHESTRATOR', <Cpu className="w-4 h-4 text-primary" />)}
