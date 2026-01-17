@@ -19,7 +19,7 @@ export const QuizHub: React.FC = () => {
     <div className="flex-1 flex flex-col overflow-hidden relative font-mono">
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
         {/* Left Pane: Theory / Target */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-20 border-b lg:border-b-0 lg:border-r border-slate-800 bg-background-dark/20 relative cyber-scroll">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 border-b lg:border-b-0 lg:border-r border-slate-800 bg-background-dark/20 relative cyber-scroll">
           {/* Progress Bar */}
           <div className="flex flex-col gap-2 mb-6">
             <div className="flex justify-between items-end mb-1">

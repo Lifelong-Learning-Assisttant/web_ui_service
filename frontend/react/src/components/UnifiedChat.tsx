@@ -25,6 +25,11 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
   const { messages, user } = useAppStore();
 
   const formatContent = (content: string) => {
+    // Очистка системных маркеров для визуального отображения
+    const displayContent = content
+      .replace('[SYSTEM: QUIZ_STARTED] ', '')
+      .replace('[SYSTEM: NEXT_QUESTION] ', '');
+
     // Регулярное выражение для поиска источников в формате JSON-подобных строк
     const sourceRegex = /- \{'filename':.*?\}/g;
     const sources: any[] = [];
@@ -78,7 +83,7 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
             },
           }}
         >
-          {cleanContent}
+          {displayContent.replace(sourceRegex, '').replace(/\*\*Источники:\*\*\n?/g, '')}
         </ReactMarkdown>
 
         {sources.length > 0 && (
@@ -125,7 +130,10 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
         const isAssistantResponse = m.role === 'assistant' && !m.isSystem && m.type !== 'quizz_question';
         const isSystemAllowed = m.isSystem && showSystem;
         
-        return isUser || isAssistantResponse || isSystemAllowed;
+        // Скрываем дубликаты вопросов, которые приходят как final_answer с маркерами
+        const isDuplicateQuizMsg = m.content.includes('[SYSTEM: QUIZ_STARTED]') || m.content.includes('[SYSTEM: NEXT_QUESTION]');
+        
+        return (isUser || isAssistantResponse || isSystemAllowed) && !isDuplicateQuizMsg;
       }
       
       // По умолчанию (all) - показываем все кроме системных (если выключены)
@@ -164,7 +172,13 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
               ) : (
                 <>
                   <span className="text-[8px] text-slate-500">{msg.timestamp.toLocaleTimeString()}</span>
-                  <span className="text-[9px] font-display text-primary font-bold uppercase tracking-wider">USER_ROOT::{user?.username}</span>
+                  <span className="text-[9px] font-display text-primary font-bold uppercase tracking-wider">
+                    {msg.meta?.interaction_mode === 'ANSWER_QUIZ' ? (
+                      <span className="text-accent-cyan neon-text-cyan">QUIZZ-ANSWER</span>
+                    ) : (
+                      `USER_ROOT::${user?.username}`
+                    )}
+                  </span>
                 </>
               )}
             </div>
@@ -176,7 +190,7 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
                   ? 'border-l-2 border-accent-lime bg-accent-lime/10 ai-bubble-glow shadow-[0_0_20px_rgba(162,255,0,0.15)]'
                   : msg.role === 'assistant'
                     ? 'border-l-2 border-accent-lime bg-accent-lime/5 ai-bubble-glow'
-                    : 'border-r-2 border-primary bg-primary/5 text-right user-bubble-glow'
+                    : `border-r-2 ${msg.meta?.interaction_mode === 'ANSWER_QUIZ' ? 'border-accent-cyan bg-accent-cyan/10' : 'border-primary bg-primary/5'} text-right user-bubble-glow`
             }`}>
               {msg.isProcessing ? (
                 <div className="flex items-center gap-3">

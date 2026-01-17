@@ -54,11 +54,8 @@ export const NetrunnerDeck: React.FC<NetrunnerDeckProps> = ({ mode }) => {
     if (inputText.trim() && !isLoading) {
       let textToSend = inputText.trim();
       
-      // Если мы в режиме ANSWER_QUIZ, можем добавить префикс или обработать иначе,
-      // но по текущей логике backend-а он сам понимает контекст.
-      // Однако, можно добавить визуальную индикацию или логику.
-      
-      await sendMessage(textToSend);
+      // Передаем текущую вкладку как режим взаимодействия
+      await sendMessage(textToSend, activeTab);
       setInputText('');
       setInputMode('EDITOR');
       
@@ -70,7 +67,7 @@ export const NetrunnerDeck: React.FC<NetrunnerDeckProps> = ({ mode }) => {
   return (
     <div
       style={{ height: isMinimized ? '40px' : `${height}vh` }}
-      className={`border-t border-primary/20 bg-surface-dark/80 backdrop-blur-md flex flex-col overflow-hidden relative transition-[height] duration-300 ease-in-out ${isMinimized ? 'h-[40px]' : ''}`}
+      className={`border-t border-primary/20 bg-surface-dark/80 backdrop-blur-md flex flex-col overflow-hidden relative transition-all duration-300 ease-in-out ${isMinimized ? 'translate-y-[calc(100%-40px)]' : ''}`}
     >
       {/* Resize Handle */}
       <div

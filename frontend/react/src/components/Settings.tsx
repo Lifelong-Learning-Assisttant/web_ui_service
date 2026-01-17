@@ -91,7 +91,7 @@ export const Settings: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-background-dark text-slate-300 font-mono p-4 md:p-8 space-y-6 cyber-scroll">
+    <div className="flex-1 flex flex-col overflow-hidden bg-background-dark text-slate-300 font-mono p-4 md:p-8 space-y-6 h-full">
       {/* Header */}
       <section className="cyber-border p-6 border-primary/30 bg-surface-dark/40 relative overflow-hidden shrink-0">
         <div className="flex items-center gap-4">

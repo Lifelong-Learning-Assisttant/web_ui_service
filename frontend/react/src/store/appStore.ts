@@ -165,7 +165,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((state) => ({ messages: [...state.messages, newMessage] }))
   },
 
-  sendMessage: async (content: string) => {
+  sendMessage: async (content: string, mode?: string) => {
     const { sessionId, settings } = get()
     set({ isLoading: true })
     
@@ -175,6 +175,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       role: 'user',
       content,
       timestamp: new Date(),
+      meta: { interaction_mode: mode }
     }
     
     // Add assistant placeholder
@@ -196,7 +197,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       const response = await axios.post(`${API_BASE_URL}/agent/run`, {
         question: content,
         session_id: sessionId,
-        settings: settings
+        settings: settings,
+        interaction_mode: mode
       })
       
       // Мы больше не ждем фиксированное время и не запрашиваем историю вручную.

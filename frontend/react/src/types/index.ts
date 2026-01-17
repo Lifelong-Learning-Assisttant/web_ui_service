@@ -81,7 +81,7 @@ export interface AppState {
   confirmIdentity: () => Promise<void>;
   resetIdentity: () => void;
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
-  sendMessage: (content: string) => Promise<void>;
+  sendMessage: (content: string, mode?: string) => Promise<void>;
   executeAction: (action: string, data?: any) => Promise<any>;
   uploadFile: (file: File) => Promise<any>;
   setActiveTab: (tab: string) => void;

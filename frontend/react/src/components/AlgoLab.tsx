@@ -31,7 +31,7 @@ export const AlgoLab: React.FC = () => {
     <div className="flex-1 flex flex-col overflow-hidden relative font-mono bg-black/40">
       <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Editor Panel */}
-        <section className="w-1/2 flex flex-col min-w-0 bg-surface-dark border-r border-white/5 relative">
+        <section className="w-1/2 flex flex-col min-w-0 bg-surface-dark border-r border-white/5 relative h-full">
           <div className="h-10 px-3 bg-black/40 border-b border-primary/20 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <Code2 className="w-4 h-4 text-secondary" />

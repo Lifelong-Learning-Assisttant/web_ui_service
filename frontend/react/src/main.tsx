@@ -69,7 +69,7 @@ const AppContent: React.FC = () => {
             </h1>
           </div>
         </header>
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {renderContent()}
         </div>
         <footer className="h-8 border-t border-white/5 bg-background-dark/95 backdrop-blur-sm flex items-center justify-between px-6 text-[9px] font-mono tracking-wider shrink-0 z-50">

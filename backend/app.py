@@ -131,6 +131,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 class AgentRunRequest(BaseModel):
     question: str
     session_id: str
+    interaction_mode: Optional[str] = None
 
 class SessionRequest(BaseModel):
     session_id: str
@@ -266,7 +267,8 @@ async def run_agent(request: Request, body: AgentRunRequest):
                 f"{settings.agent_service_url}/api/agent/run",
                 json={
                     "question": body.question,
-                    "session_id": body.session_id
+                    "session_id": body.session_id,
+                    "interaction_mode": body.interaction_mode
                 },
                 timeout=300.0
             )

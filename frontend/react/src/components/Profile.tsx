@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAppStore } from '../store/appStore';
 import { IDENTITIES } from './IdentitySelection'; // Будем экспортировать IDENTITIES для доступа к метаданным
-import { Activity, Shield, Zap, Coins, Verified, Star, CheckCircle, Database, AlertTriangle, Settings, MessageSquare, BookOpen, Terminal, User as UserIcon } from 'lucide-react';
+import { Activity, Shield, Zap, Coins, Verified, Star, CheckCircle, Database, AlertTriangle, Settings, MessageSquare, BookOpen, Terminal, User as UserIcon, LogOut } from 'lucide-react';
 
 export const Profile: React.FC = () => {
   const { user, selectedIdentity, resetIdentity } = useAppStore();
@@ -10,8 +10,8 @@ export const Profile: React.FC = () => {
   const identity = selectedIdentity || (user?.identityId ? IDENTITIES.find(i => i.id === user.identityId) : IDENTITIES[0]);
 
   return (
-    <div className="flex-1 flex overflow-hidden bg-background-dark text-slate-300 font-mono">
-      <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+    <div className="flex-1 flex flex-col overflow-hidden bg-background-dark text-slate-300 font-mono h-full">
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 cyber-scroll">
         {/* Header Section */}
         <section className="cyber-border p-6 md:p-10 border-primary/30 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-2 opacity-20 pointer-events-none">
@@ -170,6 +170,8 @@ export const Profile: React.FC = () => {
 };
 
 export const ActivityBar: React.FC<{ activeTab: string, onTabChange: (tab: string) => void }> = ({ activeTab, onTabChange }) => {
+  const { logout } = useAppStore();
+
   return (
     <nav className="w-16 flex flex-col items-center py-8 gap-10 border-r border-white/10 bg-background-dark shrink-0">
       <button onClick={() => onTabChange('chat')} className={`p-2 transition-all hover:scale-110 ${activeTab === 'chat' ? 'text-primary' : 'text-slate-500 hover:text-primary'}`}>
@@ -184,7 +186,17 @@ export const ActivityBar: React.FC<{ activeTab: string, onTabChange: (tab: strin
       <button onClick={() => onTabChange('profile')} className={`p-2 transition-all hover:scale-110 ${activeTab === 'profile' ? 'text-primary' : 'text-slate-500 hover:text-primary'}`}>
         <UserIcon className="w-6 h-6" />
       </button>
-      <div className="mt-auto">
+      <div className="mt-auto flex flex-col items-center gap-6">
+        <button
+          onClick={logout}
+          className="p-2 text-slate-500 hover:text-accent-cyan transition-all hover:scale-110 group relative"
+          title="Logout System"
+        >
+          <LogOut className="w-6 h-6" />
+          <span className="absolute left-full ml-4 px-2 py-1 bg-black border border-accent-cyan text-accent-cyan text-[8px] font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+            TERMINATE_SESSION
+          </span>
+        </button>
         <button onClick={() => onTabChange('settings')} className={`p-2 transition-colors ${activeTab === 'settings' ? 'text-primary' : 'text-slate-500 hover:text-primary'}`}>
           <Settings className="w-6 h-6" />
         </button>
