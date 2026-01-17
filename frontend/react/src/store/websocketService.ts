@@ -1,3 +1,5 @@
+import { useAppStore } from './appStore';
+
 class WebSocketService {
   private socket: WebSocket | null = null;
   private sessionId: string | null = null;
@@ -25,6 +27,26 @@ class WebSocketService {
       // Пробрасываем события терминала через кастомные события DOM
       if (data.type === 'terminal_output' || data.type === 'terminal_done') {
         window.dispatchEvent(new CustomEvent('ws-terminal-output', { detail: data }));
+        return;
+      }
+
+      // Обработка событий прогресса и новых сообщений
+      if (data.step || data.type === 'final_answer') {
+        const store = useAppStore.getState();
+        
+        // Если это финальный ответ или важное событие, обновляем историю
+        if (data.step === 'final_answer' || data.type === 'final_answer') {
+          store.setSessionId(sessionId, true);
+        } else {
+          // Для промежуточных шагов добавляем системное сообщение
+          store.addMessage({
+            role: 'assistant',
+            content: data.message || `Выполняю: ${data.step}`,
+            isSystem: true,
+            type: data.type,
+            meta: data.meta
+          });
+        }
       }
     };
 

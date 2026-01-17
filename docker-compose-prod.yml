@@ -47,6 +47,18 @@ services:
       web_ui_backend:
         condition: service_healthy
 
+  # 3. Algo Sandbox - Production
+  algo-sandbox:
+    image: ghcr.io/lifelong-learning-assisttant/web_ui_backend:v001
+    container_name: algo-sandbox
+    volumes:
+      - ../data/algo_problems:/home/sandbox/app
+    networks:
+      web_ui_network:
+        aliases:
+          - algo-sandbox
+    restart: unless-stopped
+
 networks:
   web_ui_network:
     name: web_ui_network

@@ -73,11 +73,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  setSessionId: async (sessionId: string) => {
+  setSessionId: async (sessionId: string, skipWsConnect: boolean = false) => {
     set({ sessionId, isLoading: true })
     
-    // Подключаем WebSocket при смене сессии
-    wsService.connect(sessionId);
+    // Подключаем WebSocket при смене сессии (если не просили пропустить)
+    if (!skipWsConnect) {
+      wsService.connect(sessionId);
+    }
     
     try {
       // Загружаем историю сообщений для новой сессии
