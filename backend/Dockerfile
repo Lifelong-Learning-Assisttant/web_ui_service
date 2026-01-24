@@ -1,8 +1,8 @@
 # backend/Dockerfile
-# Используем официальный образ uv с Python 3.12
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+FROM python:3.13-slim-bookworm
 
-# Установка системных утилит (curl нужен для healthcheck)
+# Установка системных утилит (curl нужен для healthcheck) и uv
+RUN pip install uv==0.9.26
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     build-essential \
