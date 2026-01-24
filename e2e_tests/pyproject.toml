@@ -1,0 +1,16 @@
+[project]
+name = "netrunner-e2e"
+version = "0.1.0"
+description = "E2E tests for Netrunner UI using Playwright"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pytest>=8.0.0",
+    "pytest-playwright>=0.6.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "--headed --slowmo 1000"
+markers = [
+    "e2e: End-to-end UI tests"
+]

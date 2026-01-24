@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-Интеграционные тесты сценариев NetRunner v3.0:
-Проверка логики графа через анализ событий прогресса (tools & steps).
-"""
-
 import asyncio
 import json
 import httpx
@@ -63,13 +57,18 @@ async def run_agent_message(session_id: str, message: str, ws):
                 
                 event = json.loads(msg)
                 
-                # События прогресса имеют поле 'step', но не 'final_answer' (хотя final_answer тоже имеет step)
-                # Просто сохраняем все события, у которых есть step
+                # События прогресса имеют поле 'step', но не 'final_answer'
                 if event.get("step"):
                     events.append(event)
                     step = event.get("step")
                     tool = event.get("tool")
-                    print(f"   🔄 Step: {step} | Tool: {tool}")
+                    meta = event.get("meta")
+                    # Логируем ключи метаданных для отладки
+                    meta_info = f" | Meta: {list(meta.keys())}" if meta else ""
+                    if meta and "documents" in meta:
+                        meta_info += f" (docs: {len(meta['documents'])})"
+                    
+                    print(f"   🔄 Step: {step} | Tool: {tool}{meta_info}")
                 
                 if event.get("step") == "final_answer" or event.get("type") == "final":
                     final_answer = event.get("message") or event.get("answer")
@@ -119,74 +118,63 @@ async def run_agent_message(session_id: str, message: str, ws):
 def check_event_sequence(events, expected_steps):
     """Проверяет наличие ожидаемых шагов в истории событий"""
     steps_found = [e.get("step") for e in events]
+    missing = []
     for expected in expected_steps:
         if expected not in steps_found:
-            print(f"❌ Ожидался шаг '{expected}', но его нет. Найдены: {steps_found}")
-            return False
+            missing.append(expected)
+    
+    if missing:
+        print(f"❌ Отсутствуют шаги: {missing}")
+        print(f"   Найдены: {steps_found}")
+        return False
     return True
 
-async def test_scenarios():
-    # Используем префикс test_, чтобы сессия была доступна разработчикам (не-админам)
-    session_id = f"test_{int(datetime.now().timestamp())}"
-    ws_url = f"{WS_BASE_URL}/ws/{session_id}?token={WS_TOKEN}"
-    
-    print(f"🚀 Запуск тестов NetRunner (Session: {session_id})")
-    
-    async with websockets.connect(ws_url) as ws:
-        # Читаем приветствие
-        await ws.recv()
-        print("✅ WebSocket подключен")
+def validate_rag_results(events):
+    """Проверяет, что поиск вернул непустые результаты"""
+    retrieval = next((e for e in events if e.get("step") == "retrieval_done"), None)
+    if not retrieval:
+        print("❌ Шаг retrieval_done не найден")
+        return False
         
-        # 1. General
-        print("\n--- [SCENARIO 1: General Chat] ---")
-        ans, events = await run_agent_message(session_id, "Привет! Ты кто?", ws)
-        assert check_event_sequence(events, ["intent_determined", "start_direct_answer", "direct_answer_done"]), "Сбой в General Flow"
-
-        # 2. RAG
-        print("\n--- [SCENARIO 2: RAG Search] ---")
-        ans, events = await run_agent_message(session_id, "Что такое градиентный спуск в ML?", ws)
-        assert check_event_sequence(events, [
-            "intent_determined",
-            "start_retrieval",
-            "retrieval_done",
-            "start_prepare_material",
-            "prepare_material_done"
-        ]), "Сбой в RAG Flow (v3.1)"
-
-        # 3. Quiz
-        print("\n--- [SCENARIO 3: Quiz Flow] ---")
+    meta = retrieval.get("meta", {})
+    docs = meta.get("documents") or meta.get("context") or meta.get("results")
+    
+    if not docs:
+        print(f"❌ RAG вернул пустой результат (0 документов). Meta: {meta}")
+        return False
         
-        print("\n[3.1] Запуск квиза (только с вариантами ответов)...")
-        ans, events = await run_agent_message(session_id, "Хочу пройти тест по нейросетям. Создай квиз только из вопросов с вариантами ответов.", ws)
-        assert check_event_sequence(events, [
-            "start_retrieval",
-            "start_prepare_material",
-            "start_generate_exam",
-            "quizz_question"
-        ]), "Сбой старта квиза (v3.1)"
+    count = len(docs) if isinstance(docs, list) else 1
+    print(f"✅ RAG нашел документов: {count}")
+    return True
 
-        print("\n[3.2] Ответ на вопрос 1 (выбор первого варианта)...")
-        ans, events = await run_agent_message(session_id, "1", ws)
-        assert check_event_sequence(events, ["quizz_question"]), "Сбой обработки ответа"
+def validate_quiz_question(events):
+    """Проверяет структуру вопроса квиза"""
+    q_event = next((e for e in events if e.get("step") == "quizz_question"), None)
+    if not q_event:
+        print("❌ Событие quizz_question не найдено")
+        return False
+        
+    meta = q_event.get("meta", {})
+    question_text = meta.get("question") or q_event.get("message")
+    options = meta.get("options")
+    q_type = meta.get("type", "unknown")
+    
+    if not question_text:
+        print("❌ Отсутствует текст вопроса")
+        return False
 
-        print("\n[3.3] Пропуск вопроса 2 (/skip_question)...")
-        ans, events = await run_agent_message(session_id, "/skip_question", ws)
-        assert check_event_sequence(events, ["quizz_question"]), "Сбой пропуска вопроса"
+    if options:
+        if not isinstance(options, list) or len(options) < 2:
+            print(f"❌ Некорректный формат вариантов ответов: {options}")
+            return False
+        print(f"✅ Вопрос '{q_type}' корректен. Вариантов: {len(options)}")
+    else:
+        print(f"✅ Вопрос '{q_type}' (открытый или без вариантов). Текст: {question_text[:50]}...")
+        
+    return True
 
-        print("\n[3.4] Уточнение контекста...")
-        ans, events = await run_agent_message(session_id, "А что значит этот термин в вопросе?", ws)
-        assert check_event_sequence(events, [
-            "start_retrieval",
-            "start_prepare_material",
-            "start_rag_answer"
-        ]), "Сбой уточнения (RAG v3.1)"
-        assert "QUIZ_CONTEXT_RESUMED" in ans or "Напоминаю" in ans, "Нет возврата контекста"
+def get_test_session_id():
+    return f"test_{int(datetime.now().timestamp())}"
 
-        print("\n[3.5] Завершение квиза (/finish_quizz)...")
-        ans, events = await run_agent_message(session_id, "/finish_quizz", ws)
-        assert check_event_sequence(events, ["start_grade_exam", "grade_done"]), "Сбой завершения квиза"
-
-    print("\n🎉 ВСЕ ТЕСТЫ ПРОЙДЕНЫ УСПЕШНО!")
-
-if __name__ == "__main__":
-    asyncio.run(test_scenarios())
+def get_ws_url(session_id):
+    return f"{WS_BASE_URL}/ws/{session_id}?token={WS_TOKEN}"
