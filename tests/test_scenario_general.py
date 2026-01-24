@@ -9,7 +9,7 @@ from netrunner_utils import (
 )
 
 async def test_general():
-    session_id = get_test_session_id()
+    session_id = get_test_session_id(prefix="direct")
     ws_url = get_ws_url(session_id)
     
     print(f"🚀 [General] Запуск теста (Session: {session_id})")

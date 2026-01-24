@@ -10,7 +10,7 @@ from netrunner_utils import (
 )
 
 async def test_quiz():
-    session_id = get_test_session_id()
+    session_id = get_test_session_id(prefix="quiz")
     ws_url = get_ws_url(session_id)
     
     print(f"🚀 [Quiz] Запуск теста (Session: {session_id})")

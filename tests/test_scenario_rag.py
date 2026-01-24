@@ -10,7 +10,7 @@ from netrunner_utils import (
 )
 
 async def test_rag():
-    session_id = get_test_session_id()
+    session_id = get_test_session_id(prefix="rag")
     ws_url = get_ws_url(session_id)
     
     print(f"🚀 [RAG] Запуск теста (Session: {session_id})")

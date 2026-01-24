@@ -35,6 +35,35 @@ WEB_UI_URL = CONFIG["web_backend_url"]
 WS_BASE_URL = CONFIG["ws_base_url"]
 WS_TOKEN = CONFIG["ws_token"]
 
+def save_session_log(session_id: str, message: str, final_answer: str, events: list):
+    """Сохраняет историю сообщения и событий в текстовый лог"""
+    logs_dir = os.path.join(os.path.dirname(__file__), "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    
+    log_file = os.path.join(logs_dir, f"{session_id}.log")
+    
+    with open(log_file, "a", encoding="utf-8") as f:
+        f.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] SESSION: {session_id}\n")
+        f.write(f"USER: {message}\n")
+        f.write("-" * 20 + "\n")
+        f.write("STREAMS/EVENTS:\n")
+        for event in events:
+            # Упрощенная запись события
+            step = event.get("step")
+            tool = event.get("tool")
+            f.write(f"  - Step: {step} | Tool: {tool}\n")
+            meta = event.get("meta")
+            if meta:
+                f.write(f"    Meta: {json.dumps(meta, ensure_ascii=False)}\n")
+            if event.get("message"):
+                f.write(f"    Msg: {event.get('message')[:100]}...\n")
+        
+        f.write("-" * 20 + "\n")
+        f.write(f"FINAL ANSWER: {final_answer}\n")
+        f.write("=" * 60 + "\n\n")
+    
+    print(f"📝 Лог сохранен: {log_file}")
+
 async def run_agent_message(session_id: str, message: str, ws):
     """Отправляет сообщение и возвращает (финальный ответ, список событий)"""
     print(f"\n📤 Отправка: '{message}'")
@@ -113,6 +142,9 @@ async def run_agent_message(session_id: str, message: str, ws):
     except asyncio.CancelledError:
         pass
             
+    # Сохраняем лог после завершения
+    save_session_log(session_id, message, final_answer, events)
+            
     return final_answer, events
 
 def check_event_sequence(events, expected_steps):
@@ -138,12 +170,13 @@ def validate_rag_results(events):
         
     meta = retrieval.get("meta", {})
     docs = meta.get("documents") or meta.get("context") or meta.get("results")
+    docs_count = meta.get("docs_count")
     
-    if not docs:
+    if not docs and not docs_count:
         print(f"❌ RAG вернул пустой результат (0 документов). Meta: {meta}")
         return False
         
-    count = len(docs) if isinstance(docs, list) else 1
+    count = docs_count if docs_count is not None else (len(docs) if isinstance(docs, list) else 1)
     print(f"✅ RAG нашел документов: {count}")
     return True
 
@@ -173,8 +206,9 @@ def validate_quiz_question(events):
         
     return True
 
-def get_test_session_id():
-    return f"test_{int(datetime.now().timestamp())}"
+def get_test_session_id(prefix: str = "test"):
+    """Генерирует ID сессии с заданным префиксом для прослеживаемости"""
+    return f"{prefix}_{int(datetime.now().timestamp())}"
 
 def get_ws_url(session_id):
     return f"{WS_BASE_URL}/ws/{session_id}?token={WS_TOKEN}"
