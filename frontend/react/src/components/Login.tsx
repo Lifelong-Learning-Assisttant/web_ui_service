@@ -7,14 +7,25 @@ export const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const { login, isLoading } = useAppStore();
   const [error, setError] = useState<string | null>(null);
+  const [failedAttempts, setFailedAttempts] = useState<number>(0);
+  const [lockMessage, setLockMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setLockMessage(null);
     try {
       await login(username, password);
-    } catch (err) {
-      setError('IDENTITY_NOT_FOUND: ACCESS_DENIED');
+    } catch (err: any) {
+      if (err.response?.status === 403) {
+        setLockMessage(err.response.data.detail);
+        setError('ACCOUNT_LOCKED');
+      } else if (err.response?.status === 401) {
+        setFailedAttempts(prev => prev + 1);
+        setError('IDENTITY_NOT_FOUND: ACCESS_DENIED');
+      } else {
+        setError('SYSTEM_ERROR: CONNECTION_FAILED');
+      }
     }
   };
 
@@ -78,6 +89,11 @@ export const Login: React.FC = () => {
                   <div className="text-[8px] text-secondary font-mono animate-pulse">
                     {isLoading ? 'SYNCING_NEURAL_LINK...' : 'SCANNING_UNREGISTERED_SUBJECT...'}
                   </div>
+                  {failedAttempts > 0 && !lockMessage && (
+                    <div className="text-[8px] text-red-400 font-mono mt-1">
+                      FAILED_ATTEMPTS: {failedAttempts}/5
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -123,6 +139,24 @@ export const Login: React.FC = () => {
                   </button>
                 </div>
               </form>
+
+              {lockMessage && (
+                <div className="mt-4 p-3 border border-red-500/50 bg-red-500/10 backdrop-blur-sm relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-red-500/5 animate-pulse"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 text-red-500 mb-1">
+                      <span className="material-symbols-outlined text-sm">lock</span>
+                      <span className="text-[10px] font-bold tracking-widest uppercase">Security_Protocol_Active</span>
+                    </div>
+                    <p className="text-[11px] text-white/90 leading-relaxed font-mono">
+                      {lockMessage}
+                    </p>
+                  </div>
+                  <div className="absolute top-0 right-0 p-1">
+                    <div className="w-1 h-1 bg-red-500 animate-ping"></div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="absolute -top-[1px] -left-[1px] w-4 h-4 border-t border-l border-secondary"></div>
