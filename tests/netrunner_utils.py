@@ -71,6 +71,15 @@ async def run_agent_message(session_id: str, message: str, ws):
     events = []
     final_answer = None
     
+    # Путь к файлу лога для реал-тайм записи
+    logs_dir = os.path.join(os.path.dirname(__file__), "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    log_file = os.path.join(logs_dir, f"{session_id}.log")
+    
+    with open(log_file, "a", encoding="utf-8") as f:
+        f.write(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] USER: {message}\n")
+        f.write("-" * 20 + "\n")
+
     # Флаг завершения (успех или ошибка)
     done_future = asyncio.get_running_loop().create_future()
 
@@ -92,7 +101,16 @@ async def run_agent_message(session_id: str, message: str, ws):
                     step = event.get("step")
                     tool = event.get("tool")
                     meta = event.get("meta")
-                    # Логируем ключи метаданных для отладки
+                    
+                    # Реал-тайм запись в лог
+                    with open(log_file, "a", encoding="utf-8") as f:
+                        f.write(f"   🔄 Step: {step} | Tool: {tool}\n")
+                        if meta:
+                            f.write(f"      Meta: {json.dumps(meta, ensure_ascii=False)}\n")
+                        if event.get("message"):
+                            f.write(f"      Msg: {event.get('message')[:200]}...\n")
+                    
+                    # Логируем ключи метаданных для отладки в консоль
                     meta_info = f" | Meta: {list(meta.keys())}" if meta else ""
                     if meta and "documents" in meta:
                         meta_info += f" (docs: {len(meta['documents'])})"
@@ -101,6 +119,11 @@ async def run_agent_message(session_id: str, message: str, ws):
                 
                 if event.get("step") == "final_answer" or event.get("type") == "final":
                     final_answer = event.get("message") or event.get("answer")
+                    
+                    with open(log_file, "a", encoding="utf-8") as f:
+                        f.write(f"✅ FINAL ANSWER: {final_answer}\n")
+                        f.write("=" * 60 + "\n")
+                        
                     print(f"✅ Ответ получен")
                     if not done_future.done():
                         done_future.set_result(True)
@@ -142,8 +165,8 @@ async def run_agent_message(session_id: str, message: str, ws):
     except asyncio.CancelledError:
         pass
             
-    # Сохраняем лог после завершения
-    save_session_log(session_id, message, final_answer, events)
+    # В V3 мы пишем в лог в режиме реального времени внутри reader()
+    # поэтому вызов save_session_log здесь не нужен, чтобы избежать дублирования.
             
     return final_answer, events
 
